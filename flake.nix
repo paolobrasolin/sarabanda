@@ -17,7 +17,7 @@
         packages = rec {
           balcon = pkgs.stdenv.mkDerivation (finalAttrs: {
             pname = "sarafaccia";
-            version = "0.1.0";
+            inherit (builtins.fromJSON (builtins.readFile ./package.json)) version;
             src = ./.;
             buildInputs = with pkgs; [
               nodejs
