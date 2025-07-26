@@ -12,7 +12,7 @@
         pkgs = import nixpkgs {inherit system;};
       in {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [nodejs pnpm biome];
+          packages = with pkgs; [nodejs pnpm];
         };
         packages = rec {
           balcon = pkgs.stdenv.mkDerivation (finalAttrs: {
@@ -26,7 +26,7 @@
             ];
             pnpmDeps = pkgs.pnpm.fetchDeps {
               inherit (finalAttrs) pname version src;
-              hash = "sha256-VLCwpw8ACdv5Mda2htKDjfIe8IXnhCFq5teb3g6YvX4=";
+              hash = "sha256-EIZekCvR0ZW3XFnrgKR/fvg08EEoHGAcw5Ks39E1SN0=";
             };
             buildPhase = ''
               pnpm run build

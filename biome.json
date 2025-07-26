@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "$schema": "./node_modules/.pnpm/@biomejs+biome@2.1.2/node_modules/@biomejs/biome/configuration_schema.json",
   "assist": {
     "actions": {
       "source": {
