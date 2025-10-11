@@ -8,5 +8,10 @@ export default defineConfig({
   },
   html: {
     title: 'sarafaccia',
+    inject: 'body',
   },
+  output: {
+    inlineScripts: true,
+    inlineStyles: true,
+  }
 });
