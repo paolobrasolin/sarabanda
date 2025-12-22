@@ -12,6 +12,7 @@
     "lint": "biome lint --write *"
   },
   "dependencies": {
+    "@ariakit/react": "^0.4.20",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
