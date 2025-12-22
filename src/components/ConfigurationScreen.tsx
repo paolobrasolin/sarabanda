@@ -415,18 +415,9 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
           className="start-game-btn"
           onClick={handleStartGame}
           disabled={!canStartGame}
-          aria-describedby={!canStartGame ? 'start-game-hint' : undefined}
         >
           Confirm and Play
         </Button>
-        {!canStartGame && (
-          <div id="start-game-hint" className="start-game-hint" role="alert">
-            {!validationStatus?.isValid && 'Please configure a valid Google Sheet URL. '}
-            {(config.teamNames?.length || 0) < 2 && 'Please add at least 2 teams. '}
-            {(config.selectedDifficulties?.length || 0) < 1 && 'Please select at least one difficulty. '}
-            {(config.selectedCategories?.length || 0) < 1 && 'Please select at least one category.'}
-          </div>
-        )}
       </div>
     </div>
   );
