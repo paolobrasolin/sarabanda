@@ -40,24 +40,19 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
     // Ensure arrays are properly sized on initialization
     const initialConfig = state.config;
     const teamCount = initialConfig.teamNames?.length || 2;
-    const turnDurations = Array.isArray(initialConfig.turnDurations) ? initialConfig.turnDurations : [];
-    const turnScores = Array.isArray(initialConfig.scoringSystem?.turnScores)
-      ? initialConfig.scoringSystem.turnScores
-      : [];
+    const nthTurnDurations = Array.isArray(initialConfig.nthTurnDurations) ? initialConfig.nthTurnDurations : [];
+    const nthTurnScores = Array.isArray(initialConfig.nthTurnScores) ? initialConfig.nthTurnScores : [];
 
     return {
       ...initialConfig,
-      turnDurations:
-        turnDurations.length === teamCount
-          ? turnDurations
-          : Array.from({ length: teamCount }, (_, i) => turnDurations[i] || turnDurations[0] || 60),
-      scoringSystem: {
-        ...initialConfig.scoringSystem,
-        turnScores:
-          turnScores.length === teamCount
-            ? turnScores
-            : Array.from({ length: teamCount }, (_, i) => turnScores[i] || turnScores[0] || 0.5),
-      },
+      nthTurnDurations:
+        nthTurnDurations.length === teamCount
+          ? nthTurnDurations
+          : Array.from({ length: teamCount }, (_, i) => nthTurnDurations[i] || nthTurnDurations[0] || 60),
+      nthTurnScores:
+        nthTurnScores.length === teamCount
+          ? nthTurnScores
+          : Array.from({ length: teamCount }, (_, i) => nthTurnScores[i] || nthTurnScores[0] || 0.5),
     };
   });
   const [numberOfTeams, setNumberOfTeams] = useState(state.config.teamNames?.length || 2);
@@ -74,27 +69,21 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
             return `Team ${currentTeamCount + i + 1}`;
           });
           const newTurnScores = Array.from({ length: numberOfTeams - currentTeamCount }, () => 0.5);
-          const defaultDuration = currentTeamCount > 0 ? prev.turnDurations[currentTeamCount - 1] : 60;
+          const defaultDuration = currentTeamCount > 0 ? prev.nthTurnDurations[currentTeamCount - 1] : 60;
           const newTurnDurations = Array.from({ length: numberOfTeams - currentTeamCount }, () => defaultDuration);
           return {
             ...prev,
             teamNames: [...prev.teamNames, ...newTeams],
-            turnDurations: [...prev.turnDurations, ...newTurnDurations],
-            scoringSystem: {
-              ...prev.scoringSystem,
-              turnScores: [...prev.scoringSystem.turnScores, ...newTurnScores],
-            },
+            nthTurnDurations: [...prev.nthTurnDurations, ...newTurnDurations],
+            nthTurnScores: [...prev.nthTurnScores, ...newTurnScores],
           };
         } else {
           // Remove extra teams
           return {
             ...prev,
             teamNames: prev.teamNames.slice(0, numberOfTeams),
-            turnDurations: prev.turnDurations.slice(0, numberOfTeams),
-            scoringSystem: {
-              ...prev.scoringSystem,
-              turnScores: prev.scoringSystem.turnScores.slice(0, numberOfTeams),
-            },
+            nthTurnDurations: prev.nthTurnDurations.slice(0, numberOfTeams),
+            nthTurnScores: prev.nthTurnScores.slice(0, numberOfTeams),
           };
         }
       }
@@ -358,7 +347,7 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                   />
                 </FormGroup>
 
-                {(config.turnDurations || []).map((duration, index) => (
+                {(config.nthTurnDurations || []).map((duration, index) => (
                   <FormGroup key={index}>
                     <FormLabel htmlFor={`turn-duration-${index}`}>Turn {index + 1} Duration</FormLabel>
                     <FormInput
@@ -368,9 +357,9 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                       max="300"
                       value={duration.toString()}
                       onChange={(e) => {
-                        const newDurations = [...(config.turnDurations || [])];
+                        const newDurations = [...(config.nthTurnDurations || [])];
                         newDurations[index] = parseInt(e.target.value) || 60;
-                        setConfig((prev) => ({ ...prev, turnDurations: newDurations }));
+                        setConfig((prev) => ({ ...prev, nthTurnDurations: newDurations }));
                       }}
                     />
                   </FormGroup>
@@ -385,20 +374,17 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                     type="number"
                     step="0.5"
                     min="0"
-                    value={config.scoringSystem.freeTurn.toString()}
+                    value={config.freeTurnScore.toString()}
                     onChange={(e) =>
                       setConfig((prev) => ({
                         ...prev,
-                        scoringSystem: {
-                          ...prev.scoringSystem,
-                          freeTurn: parseFloat(e.target.value) || 0,
-                        },
+                        freeTurnScore: parseFloat(e.target.value) || 0,
                       }))
                     }
                   />
                 </FormGroup>
 
-                {(config.scoringSystem?.turnScores || []).map((score, index) => (
+                {(config.nthTurnScores || []).map((score, index) => (
                   <FormGroup key={index}>
                     <FormLabel htmlFor={`turn-score-${index}`}>Turn {index + 1} Score</FormLabel>
                     <FormInput
@@ -408,14 +394,11 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                       min="0"
                       value={score.toString()}
                       onChange={(e) => {
-                        const newTurnScores = [...(config.scoringSystem?.turnScores || [])];
+                        const newTurnScores = [...(config.nthTurnScores || [])];
                         newTurnScores[index] = parseFloat(e.target.value) || 0;
                         setConfig((prev) => ({
                           ...prev,
-                          scoringSystem: {
-                            ...prev.scoringSystem,
-                            turnScores: newTurnScores,
-                          },
+                          nthTurnScores: newTurnScores,
                         }));
                       }}
                     />

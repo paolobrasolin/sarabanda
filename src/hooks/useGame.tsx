@@ -31,15 +31,12 @@ const initialState: GameState = {
     googleSheetUrl: '',
     numberOfRounds: 10,
     freeTurnDuration: 30,
-    turnDurations: [60, 60], // one duration per team
+    nthTurnDurations: [60, 60], // one duration per team
     teamNames: ['Team A', 'Team B'],
     selectedDifficulties: [],
     selectedCategories: [],
-    scoringSystem: {
-      freeTurn: 0.5,
-      turnScores: [2, 1],
-    },
-    characterSelectionMode: 'random',
+    freeTurnScore: 0.5,
+    nthTurnScores: [2, 1],
   },
   characters: [],
   usedCharacters: new Set(),

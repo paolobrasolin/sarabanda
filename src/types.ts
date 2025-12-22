@@ -11,15 +11,12 @@ export interface GameConfig {
   googleSheetUrl: string;
   numberOfRounds: number;
   freeTurnDuration: number; // duration in seconds for free-turn phase
-  turnDurations: number[]; // duration in seconds for each turn (1st turn, 2nd turn, etc.)
+  nthTurnDurations: number[]; // duration in seconds for each turn (1st turn, 2nd turn, etc.)
   teamNames: string[];
   selectedDifficulties: string[];
   selectedCategories: string[];
-  scoringSystem: {
-    freeTurn: number;
-    turnScores: number[]; // score for each turn (1st turn, 2nd turn, etc.)
-  };
-  characterSelectionMode: 'random' | 'increasing';
+  freeTurnScore: number;
+  nthTurnScores: number[]; // score for each turn (1st turn, 2nd turn, etc.)
 }
 
 export interface GameState {
