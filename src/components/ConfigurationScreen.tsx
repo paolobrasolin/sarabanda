@@ -243,7 +243,7 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                     }));
                   }}
                 >
-                  <SelectLabel>Select Difficulties</SelectLabel>
+                  <SelectLabel>Difficulties</SelectLabel>
                   <Select className="select-button" required>
                     {!config.selectedDifficulties || config.selectedDifficulties.length === 0
                       ? 'No difficulties selected'
@@ -273,7 +273,7 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                     }));
                   }}
                 >
-                  <SelectLabel>Select Categories</SelectLabel>
+                  <SelectLabel>Categories</SelectLabel>
                   <Select className="select-button">
                     {!config.selectedCategories || config.selectedCategories.length === 0
                       ? 'No categories selected'
