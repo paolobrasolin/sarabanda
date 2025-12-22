@@ -32,7 +32,7 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
     isValid: boolean;
     characterCount: number;
     categories: string[];
-    difficulties: number[];
+    difficulties: string[];
   } | null>(null);
 
   const [loadedCharacters, setLoadedCharacters] = useState<Character[]>([]);
@@ -121,7 +121,7 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
       const characters = state.characters;
       setLoadedCharacters(characters);
       const categories = [...new Set(characters.map((c) => c.category))].sort();
-      const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort((a, b) => a - b);
+      const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
 
       setValidationStatus({
         isValid: true,
@@ -157,7 +157,7 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
         const characters = result.data;
         setLoadedCharacters(characters);
         const categories = [...new Set(characters.map((c) => c.category))].sort();
-        const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort((a, b) => a - b);
+        const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
 
         setValidationStatus({
           isValid: true,
@@ -246,13 +246,11 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
 
               <FormGroup>
                 <SelectProvider
-                  value={(config.selectedDifficulties || []).map(String)}
+                  value={config.selectedDifficulties || []}
                   setValue={(value) => {
                     setConfig((prev) => ({
                       ...prev,
-                      selectedDifficulties: Array.isArray(value)
-                        ? value.map(Number).sort((a, b) => a - b)
-                        : prev.selectedDifficulties || [],
+                      selectedDifficulties: Array.isArray(value) ? value.sort() : prev.selectedDifficulties || [],
                     }));
                   }}
                 >
@@ -261,13 +259,13 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
                     {!config.selectedDifficulties || config.selectedDifficulties.length === 0
                       ? 'No difficulties selected'
                       : config.selectedDifficulties.length === 1
-                        ? String(config.selectedDifficulties[0])
+                        ? config.selectedDifficulties[0]
                         : `${config.selectedDifficulties.length} difficulties selected`}
                     <SelectArrow />
                   </Select>
                   <SelectPopover gutter={4} sameWidth className="select-popover">
                     {validationStatus?.difficulties?.map((difficulty) => (
-                      <SelectItem key={difficulty} value={String(difficulty)} className="select-item">
+                      <SelectItem key={difficulty} value={difficulty} className="select-item">
                         <SelectItemCheck />
                         {difficulty}
                       </SelectItem>

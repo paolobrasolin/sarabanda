@@ -184,19 +184,13 @@ function parseCharacterFromValues(values: string[], headerMap: HeaderMap): Chara
     const familyNames = values[headerMap.family_names]?.trim() || '';
     const givenNames = values[headerMap.given_names]?.trim() || '';
     const category = values[headerMap.category]?.trim() || '';
-    const difficultyStr = values[headerMap.difficulty]?.trim() || '1';
+    const difficulty = values[headerMap.difficulty]?.trim() || '';
     const imageUrl = values[headerMap.image_url]?.trim() || '';
     const hintsStr = values[headerMap.hints]?.trim() || '';
 
     // Skip empty rows
     if (!familyNames && !givenNames) {
       return null;
-    }
-
-    // Parse difficulty
-    const difficulty = parseFloat(difficultyStr);
-    if (isNaN(difficulty) || difficulty < 0) {
-      throw new Error(`Invalid difficulty: ${difficultyStr}`);
     }
 
     // Parse hints (split by colons)

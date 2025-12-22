@@ -2,7 +2,7 @@ export interface Character {
   family_names: string;
   given_names: string;
   category: string;
-  difficulty: number;
+  difficulty: string;
   image_url: string;
   hints: string[];
 }
@@ -13,7 +13,7 @@ export interface GameConfig {
   freeTurnDuration: number; // duration in seconds for free-turn phase
   turnDurations: number[]; // duration in seconds for each turn (1st turn, 2nd turn, etc.)
   teamNames: string[];
-  selectedDifficulties: number[];
+  selectedDifficulties: string[];
   selectedCategories: string[];
   scoringSystem: {
     freeTurn: number;
