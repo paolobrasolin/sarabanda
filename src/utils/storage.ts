@@ -1,15 +1,15 @@
 import type { Character, GameConfig, GameState } from '../types';
 
 const STORAGE_KEYS = {
-  GAME_STATE: 'sarabanda_game_state',
-  USED_CHARACTERS: 'sarabanda_used_characters',
+  STATUS: 'sarabanda_status',
+  SCRAPS: 'sarabanda_scraps',
   CONFIG: 'sarabanda_config',
   PEOPLE: 'sarabanda_people',
 } as const;
 
 export function saveGameState(gameState: GameState): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(gameState));
+    localStorage.setItem(STORAGE_KEYS.STATUS, JSON.stringify(gameState));
   } catch (error) {
     console.error('Failed to save game state:', error);
   }
@@ -17,7 +17,7 @@ export function saveGameState(gameState: GameState): void {
 
 export function loadGameState(): GameState | null {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+    const saved = localStorage.getItem(STORAGE_KEYS.STATUS);
     if (!saved) return null;
 
     const parsed = JSON.parse(saved);
@@ -36,7 +36,7 @@ export function loadGameState(): GameState | null {
 
 export function clearGameState(): void {
   try {
-    localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
+    localStorage.removeItem(STORAGE_KEYS.STATUS);
   } catch (error) {
     console.error('Failed to clear game state:', error);
   }
@@ -44,7 +44,7 @@ export function clearGameState(): void {
 
 export function saveUsedCharacters(usedCharacters: Set<string>): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.USED_CHARACTERS, JSON.stringify([...usedCharacters]));
+    localStorage.setItem(STORAGE_KEYS.SCRAPS, JSON.stringify([...usedCharacters]));
   } catch (error) {
     console.error('Failed to save used characters:', error);
   }
@@ -52,7 +52,7 @@ export function saveUsedCharacters(usedCharacters: Set<string>): void {
 
 export function loadUsedCharacters(): Set<string> {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.USED_CHARACTERS);
+    const saved = localStorage.getItem(STORAGE_KEYS.SCRAPS);
     if (!saved) return new Set();
 
     const parsed = JSON.parse(saved);
@@ -85,8 +85,8 @@ export function loadConfig(): GameConfig | null {
 
 export function clearAllData(): void {
   try {
-    localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
-    localStorage.removeItem(STORAGE_KEYS.USED_CHARACTERS);
+    localStorage.removeItem(STORAGE_KEYS.STATUS);
+    localStorage.removeItem(STORAGE_KEYS.SCRAPS);
     localStorage.removeItem(STORAGE_KEYS.CONFIG);
     localStorage.removeItem(STORAGE_KEYS.PEOPLE);
   } catch (error) {
