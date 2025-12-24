@@ -184,8 +184,6 @@ export function ConfigScreen() {
 
   return (
     <div className="configuration-screen">
-      <h1>Quiz Game Configuration</h1>
-
       <section className="config-section" aria-labelledby="sheet-config-heading">
         <FormProvider>
           <Form>
@@ -404,16 +402,6 @@ export function ConfigScreen() {
           </Form>
         </FormProvider>
       </section>
-
-      <div className="config-actions">
-        <Button
-          className="start-game-btn"
-          onClick={handleStartGame}
-          disabled={!canStartGame}
-        >
-          Confirm and Play
-        </Button>
-      </div>
     </div>
   );
 }
