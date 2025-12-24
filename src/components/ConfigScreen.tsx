@@ -239,10 +239,10 @@ export function ConfigScreen() {
                   <SelectLabel>Difficulties</SelectLabel>
                   <Select className="select-button" required>
                     {!config.selectedDifficulties || config.selectedDifficulties.length === 0
-                      ? 'No difficulties selected'
+                      ? 'No selection'
                       : config.selectedDifficulties.length === 1
                         ? config.selectedDifficulties[0]
-                        : `${config.selectedDifficulties.length} difficulties selected`}
+                        : `${config.selectedDifficulties.length} selected`}
                     <SelectArrow />
                   </Select>
                   <SelectPopover gutter={4} sameWidth className="select-popover">
@@ -269,10 +269,10 @@ export function ConfigScreen() {
                   <SelectLabel>Categories</SelectLabel>
                   <Select className="select-button">
                     {!config.selectedCategories || config.selectedCategories.length === 0
-                      ? 'No categories selected'
+                      ? 'No selection'
                       : config.selectedCategories.length === 1
                         ? config.selectedCategories[0]
-                        : `${config.selectedCategories.length} categories selected`}
+                        : `${config.selectedCategories.length} selected`}
                     <SelectArrow />
                   </Select>
                   <SelectPopover gutter={4} sameWidth className="select-popover">
@@ -405,4 +405,3 @@ export function ConfigScreen() {
     </div>
   );
 }
-
