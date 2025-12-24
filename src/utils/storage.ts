@@ -1,9 +1,9 @@
 import type { Character, GameConfig, GameState } from '../types';
 
 const STORAGE_KEYS = {
-  GAME_STATE: 'sarafaccia_game_state',
-  USED_CHARACTERS: 'sarafaccia_used_characters',
-  GAME_CONFIG: 'sarafaccia_game_config',
+  GAME_STATE: 'sarabanda_game_state',
+  USED_CHARACTERS: 'sarabanda_used_characters',
+  GAME_CONFIG: 'sarabanda_game_config',
 } as const;
 
 export function saveGameState(gameState: GameState): void {

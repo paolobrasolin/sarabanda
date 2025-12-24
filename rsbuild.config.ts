@@ -4,10 +4,10 @@ import { pluginReact } from '@rsbuild/plugin-react';
 export default defineConfig({
   plugins: [pluginReact()],
   server: {
-    base: '/sarafaccia/',
+    base: '/sarabanda/',
   },
   html: {
-    title: 'sarafaccia',
+    title: 'sarabanda',
     inject: 'body',
   },
   output: {

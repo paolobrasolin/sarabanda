@@ -16,7 +16,7 @@
         };
         packages = rec {
           balcon = pkgs.stdenv.mkDerivation (finalAttrs: {
-            pname = "sarafaccia";
+            pname = "sarabanda";
             inherit (builtins.fromJSON (builtins.readFile ./package.json)) version;
             src = ./.;
             buildInputs = with pkgs; [
