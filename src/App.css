@@ -620,42 +620,47 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background: #ffc160;
   padding: 2rem;
 }
 
 .splash-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2rem;
-  max-width: 600px;
+  justify-content: space-between;
+  gap: 4rem;
+  max-width: 1200px;
   width: 100%;
 }
 
-.splash-image-container {
-  width: 100%;
-  max-width: 400px;
-  aspect-ratio: 4 / 3;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  border: 2px solid var(--border);
+.splash-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  flex: 1;
+}
+
+.splash-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .splash-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 500px;
+  height: auto;
   display: block;
 }
 
 .splash-title {
-  font-size: 3.5rem;
+  font-size: 5rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
-  text-align: center;
+  text-align: left;
   letter-spacing: -0.02em;
 }
 
@@ -663,9 +668,8 @@ body {
   display: flex;
   gap: 1.5rem;
   width: 100%;
-  max-width: 400px;
-  margin-top: 1rem;
-  justify-content: center;
+  max-width: 500px;
+  justify-content: flex-start;
 }
 
 .splash-btn {
@@ -682,13 +686,13 @@ body {
 }
 
 .splash-btn-primary {
-  background-color: var(--accent-primary);
+  background-color: #32b5a4;
   color: white;
   box-shadow: var(--shadow);
 }
 
 .splash-btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #2a9d8e;
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
@@ -771,16 +775,30 @@ body {
     width: 100%;
   }
 
+  .splash-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .splash-left {
+    align-items: center;
+    text-align: center;
+  }
+
   .splash-title {
-    font-size: 2.5rem;
+    font-size: 3rem;
+    text-align: center;
   }
 
   .splash-buttons {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    justify-content: center;
+    max-width: 100%;
+    flex-wrap: wrap;
   }
 
   .splash-btn {
-    width: 100%;
+    flex: 1;
+    min-width: 120px;
   }
 }
