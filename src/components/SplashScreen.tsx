@@ -1,14 +1,11 @@
 import { Button } from '@ariakit/react';
-import { useGame } from '../hooks/useGame';
 
-interface SplashScreenProps {
-  onPlay: () => void;
-  onContinue: () => void;
-}
-
-export function SplashScreen({ onPlay, onContinue }: SplashScreenProps) {
-  const { state } = useGame();
-  const hasOngoingGame = state.isGameActive;
+export function SplashScreen() {
+  const openMode = (mode: 'config' | 'remote' | 'player') => {
+    const url = new URL(window.location.href);
+    url.hash = mode;
+    window.open(url.toString(), '_blank');
+  };
 
   return (
     <div className="splash-screen">
@@ -22,17 +19,28 @@ export function SplashScreen({ onPlay, onContinue }: SplashScreenProps) {
         </div>
         <h1 className="splash-title">Quiz Game</h1>
         <div className="splash-buttons">
-          {hasOngoingGame ? (
-            <Button className="splash-btn splash-btn-primary" onClick={onContinue}>
-              Continue
-            </Button>
-          ) : (
-            <Button className="splash-btn splash-btn-primary" onClick={onPlay}>
-              Play
-            </Button>
-          )}
+          <Button
+            className="splash-btn splash-btn-primary"
+            onClick={() => openMode('config')}
+          >
+            Config
+          </Button>
+          <Button
+            className="splash-btn splash-btn-primary"
+            onClick={() => openMode('remote')}
+          >
+            Remote
+          </Button>
+          <Button
+            className="splash-btn splash-btn-primary"
+            onClick={() => openMode('player')}
+          >
+            Player
+          </Button>
         </div>
       </div>
     </div>
   );
 }
+
+

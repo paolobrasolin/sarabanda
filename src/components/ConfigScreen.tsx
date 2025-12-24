@@ -20,11 +20,11 @@ import { useGame } from '../hooks/useGame';
 import type { Character, GameConfig } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
 
-interface ConfigurationScreenProps {
+interface ConfigScreenProps {
   onStartGame: () => void;
 }
 
-export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
+export function ConfigScreen({ onStartGame }: ConfigScreenProps) {
   const { state, dispatch } = useGame();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -422,3 +422,4 @@ export function ConfigurationScreen({ onStartGame }: ConfigurationScreenProps) {
     </div>
   );
 }
+

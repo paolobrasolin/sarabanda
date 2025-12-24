@@ -1,44 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import { ConfigurationScreen } from './components/ConfigurationScreen';
+import { ConfigScreen } from './components/ConfigScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { GameScreen } from './components/GameScreen';
+import { PlayerScreen } from './components/PlayerScreen';
+import { RemoteScreen } from './components/RemoteScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { GameProvider, useGame } from './hooks/useGame';
 
-type AppScreen = 'splash' | 'configuration' | 'game';
+type AppMode = 'splash' | 'config' | 'remote' | 'player';
 
 const AppContent = () => {
-  const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash');
+  const [mode, setMode] = useState<AppMode>('splash');
   const { dispatch } = useGame();
 
-  const handlePlay = () => {
-    setCurrentScreen('configuration');
-  };
-
-  const handleContinue = () => {
-    setCurrentScreen('game');
-  };
+  useEffect(() => {
+    // Read mode from URL hash
+    const hash = window.location.hash.slice(1); // Remove the '#' character
+    if (hash && ['config', 'remote', 'player'].includes(hash)) {
+      setMode(hash as AppMode);
+    } else {
+      setMode('splash');
+    }
+  }, []);
 
   const handleStartGame = () => {
     dispatch({ type: 'START_GAME' });
-    setCurrentScreen('game');
-  };
-
-  const handleQuitGame = () => {
-    dispatch({ type: 'END_GAME' });
-    setCurrentScreen('splash');
+    // Navigate to game screen (could be a separate mode or handled differently)
   };
 
   return (
     <div className="app">
-      {currentScreen === 'splash' ? (
-        <SplashScreen onPlay={handlePlay} onContinue={handleContinue} />
-      ) : currentScreen === 'configuration' ? (
-        <ConfigurationScreen onStartGame={handleStartGame} />
-      ) : (
-        <GameScreen onQuitGame={handleQuitGame} />
-      )}
+      {mode === 'splash' ? (
+        <SplashScreen />
+      ) : mode === 'config' ? (
+        <ConfigScreen onStartGame={handleStartGame} />
+      ) : mode === 'remote' ? (
+        <RemoteScreen />
+      ) : mode === 'player' ? (
+        <PlayerScreen />
+      ) : null}
     </div>
   );
 };
@@ -47,7 +47,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <GameProvider>
-        <ConfigurationScreen onStartGame={() => { }} />
+        <AppContent />
       </GameProvider>
     </ErrorBoundary>
   );

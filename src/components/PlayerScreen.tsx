@@ -1,12 +1,14 @@
 import { Button, Role } from '@ariakit/react';
 import { useGame } from '../hooks/useGame';
 
-interface GameScreenProps {
-  onQuitGame: () => void;
-}
+export function PlayerScreen() {
+  const { state, dispatch } = useGame();
 
-export function GameScreen({ onQuitGame }: GameScreenProps) {
-  const { state } = useGame();
+  const handleQuitGame = () => {
+    dispatch({ type: 'END_GAME' });
+    // Navigate back to splash
+    window.location.href = window.location.origin + window.location.pathname;
+  };
 
   return (
     <div className="game-screen">
@@ -16,7 +18,7 @@ export function GameScreen({ onQuitGame }: GameScreenProps) {
           <Role role="status" aria-live="polite" aria-atomic="true">
             Round {state.currentRound} of {state.config.numberOfRounds}
           </Role>
-          <Button onClick={onQuitGame} className="quit-btn">
+          <Button onClick={handleQuitGame} className="quit-btn">
             Quit Game
           </Button>
         </div>
@@ -72,3 +74,4 @@ export function GameScreen({ onQuitGame }: GameScreenProps) {
     </div>
   );
 }
+
