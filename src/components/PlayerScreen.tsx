@@ -1,14 +1,30 @@
-import { Button, Role } from '@ariakit/react';
-import { useGame } from '../hooks/useGame';
+import { Role } from '@ariakit/react';
+import { useGameState } from '../hooks/useGameState';
 
+/**
+ * PlayerScreen - Passive display screen for players
+ * This screen is read-only and listens to localStorage changes
+ * to stay in sync with RemoteScreen updates.
+ */
 export function PlayerScreen() {
-  const { state, dispatch } = useGame();
+  const { state } = useGameState();
 
-  const handleQuitGame = () => {
-    dispatch({ type: 'END_GAME' });
-    // Navigate back to splash
-    window.location.href = window.location.origin + window.location.pathname;
-  };
+  // Show loading/empty state if no game state is available
+  if (!state) {
+    return (
+      <div className="game-screen">
+        <section className="game-header" aria-labelledby="game-title">
+          <h1 id="game-title">Quiz Game</h1>
+        </section>
+        <section className="game-content">
+          <div className="game-not-started">
+            <h2>Waiting for Game Master</h2>
+            <p>Game configuration will appear here once the Game Master starts a game.</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="game-screen">
@@ -16,11 +32,14 @@ export function PlayerScreen() {
         <h1 id="game-title">Quiz Game</h1>
         <div className="game-info">
           <Role role="status" aria-live="polite" aria-atomic="true">
-            Round {state.currentRound} of {state.config.numberOfRounds}
+            {state.isGameActive ? (
+              <>
+                Round {state.currentRound} of {state.config.numberOfRounds}
+              </>
+            ) : (
+              <>Game Not Started</>
+            )}
           </Role>
-          <Button onClick={handleQuitGame} className="quit-btn">
-            Quit Game
-          </Button>
         </div>
       </section>
 
@@ -44,6 +63,17 @@ export function PlayerScreen() {
       </section>
 
       <section className="game-content" aria-labelledby="game-content-heading">
+        {/* Timer display - always show for POC testing */}
+        {(state.timeRemaining > 0 || state.isTimerRunning) && (
+          <section className="timer-display" aria-labelledby="timer-heading">
+            <h3 id="timer-heading">Timer</h3>
+            <div className={`timer-value ${state.isTimerRunning ? 'timer-running' : 'timer-stopped'}`}>
+              {state.timeRemaining}s
+            </div>
+            <div className="timer-status">{state.isTimerRunning ? '⏱️ Running' : '⏸️ Stopped'}</div>
+          </section>
+        )}
+
         {!state.isGameActive ? (
           <div className="game-not-started">
             <h2 id="game-content-heading">Ready to Play</h2>
@@ -52,7 +82,7 @@ export function PlayerScreen() {
         ) : (
           <div className="game-active">
             <h2 id="game-content-heading">Game Active</h2>
-            <p>Game logic will be implemented in Phase 2</p>
+
             <section className="debug-info" aria-labelledby="debug-heading">
               <h3 id="debug-heading">Debug Info</h3>
               <dl>
@@ -74,4 +104,3 @@ export function PlayerScreen() {
     </div>
   );
 }
-

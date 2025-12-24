@@ -4,6 +4,7 @@ import type { Character, GameConfig, GameState, RoundResult } from '../types';
 import {
   createCharacterId,
   loadGameState,
+  loadPeople,
   loadUsedCharacters,
   saveGameState,
   saveUsedCharacters,
@@ -154,25 +155,43 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedState = loadGameState();
     const savedUsedCharacters = loadUsedCharacters();
+    const savedPeople = loadPeople();
 
     if (savedState) {
       dispatch({ type: 'LOAD_STATE', payload: savedState });
+      // If saved state doesn't have characters but we have saved people, load them
+      if (savedState.characters.length === 0 && savedPeople && savedPeople.length > 0) {
+        dispatch({ type: 'SET_CHARACTERS', payload: savedPeople });
+      }
+    } else {
+      // If no saved state, try to load characters from separate storage
+      if (savedPeople && savedPeople.length > 0) {
+        dispatch({ type: 'SET_CHARACTERS', payload: savedPeople });
+      }
     }
 
     if (savedUsedCharacters.size > 0) {
-      // Merge with existing used characters
-      const mergedUsedCharacters = new Set([...state.usedCharacters, ...savedUsedCharacters]);
-      mergedUsedCharacters.forEach((id) => {
+      // Load used characters - they'll be merged after state is loaded
+      savedUsedCharacters.forEach((id) => {
         dispatch({ type: 'MARK_CHARACTER_USED', payload: id });
       });
     }
   }, []);
 
-  // Save state whenever it changes
+  // Load characters from separate storage if state doesn't have them
   useEffect(() => {
-    if (state.isGameActive || state.characters.length > 0) {
-      saveGameState(state);
+    if (state.characters.length === 0) {
+      const savedPeople = loadPeople();
+      if (savedPeople && savedPeople.length > 0) {
+        dispatch({ type: 'SET_CHARACTERS', payload: savedPeople });
+      }
     }
+  }, [state.characters.length]);
+
+  // Save state whenever it changes
+  // Always save state so PlayerScreen can see it (for POC testing and normal operation)
+  useEffect(() => {
+    saveGameState(state);
   }, [state]);
 
   // Save used characters whenever they change
