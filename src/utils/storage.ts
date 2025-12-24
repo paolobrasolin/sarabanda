@@ -3,7 +3,8 @@ import type { Character, GameConfig, GameState } from '../types';
 const STORAGE_KEYS = {
   GAME_STATE: 'sarabanda_game_state',
   USED_CHARACTERS: 'sarabanda_used_characters',
-  GAME_CONFIG: 'sarabanda_game_config',
+  CONFIG: 'sarabanda_config',
+  PEOPLE: 'sarabanda_people',
 } as const;
 
 export function saveGameState(gameState: GameState): void {
@@ -62,22 +63,22 @@ export function loadUsedCharacters(): Set<string> {
   }
 }
 
-export function saveGameConfig(config: GameConfig): void {
+export function saveConfig(config: GameConfig): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.GAME_CONFIG, JSON.stringify(config));
+    localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(config));
   } catch (error) {
-    console.error('Failed to save game config:', error);
+    console.error('Failed to save config:', error);
   }
 }
 
-export function loadGameConfig(): GameConfig | null {
+export function loadConfig(): GameConfig | null {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.GAME_CONFIG);
+    const saved = localStorage.getItem(STORAGE_KEYS.CONFIG);
     if (!saved) return null;
 
     return JSON.parse(saved) as GameConfig;
   } catch (error) {
-    console.error('Failed to load game config:', error);
+    console.error('Failed to load config:', error);
     return null;
   }
 }
@@ -86,9 +87,30 @@ export function clearAllData(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
     localStorage.removeItem(STORAGE_KEYS.USED_CHARACTERS);
-    localStorage.removeItem(STORAGE_KEYS.GAME_CONFIG);
+    localStorage.removeItem(STORAGE_KEYS.CONFIG);
+    localStorage.removeItem(STORAGE_KEYS.PEOPLE);
   } catch (error) {
     console.error('Failed to clear all data:', error);
+  }
+}
+
+export function savePeople(characters: Character[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PEOPLE, JSON.stringify(characters));
+  } catch (error) {
+    console.error('Failed to save people:', error);
+  }
+}
+
+export function loadPeople(): Character[] | null {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.PEOPLE);
+    if (!saved) return null;
+
+    return JSON.parse(saved) as Character[];
+  } catch (error) {
+    console.error('Failed to load people:', error);
+    return null;
   }
 }
 

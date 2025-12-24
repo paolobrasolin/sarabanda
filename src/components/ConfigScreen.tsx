@@ -19,6 +19,12 @@ import { useEffect, useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import type { Character, GameConfig } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
+import {
+  loadConfig,
+  saveConfig,
+  loadPeople,
+  savePeople,
+} from '../utils/storage';
 
 export function ConfigScreen() {
   const { state, dispatch } = useGame();
@@ -31,10 +37,14 @@ export function ConfigScreen() {
     difficulties: string[];
   } | null>(null);
 
-  const [loadedCharacters, setLoadedCharacters] = useState<Character[]>([]);
+  const [loadedCharacters, setLoadedCharacters] = useState<Character[]>(() => {
+    // Try to load from localStorage on mount
+    return loadPeople() || [];
+  });
   const [config, setConfig] = useState<GameConfig>(() => {
-    // Ensure arrays are properly sized on initialization
-    const initialConfig = state.config;
+    // Try to load from localStorage first, fallback to state.config
+    const savedConfig = loadConfig();
+    const initialConfig = savedConfig || state.config;
     const teamCount = initialConfig.teamNames?.length || 2;
     const nthTurnDurations = Array.isArray(initialConfig.nthTurnDurations) ? initialConfig.nthTurnDurations : [];
     const nthTurnScores = Array.isArray(initialConfig.nthTurnScores) ? initialConfig.nthTurnScores : [];
@@ -51,8 +61,8 @@ export function ConfigScreen() {
           : Array.from({ length: teamCount }, (_, i) => nthTurnScores[i] || nthTurnScores[0] || 0.5),
     };
   });
-  const [numberOfTeams, setNumberOfTeams] = useState(state.config.teamNames?.length || 2);
-  const [numberOfRounds, setNumberOfRounds] = useState(state.config.numberOfRounds);
+  const [numberOfTeams, setNumberOfTeams] = useState(config.teamNames?.length || 2);
+  const [numberOfRounds, setNumberOfRounds] = useState(config.numberOfRounds);
 
   // Sync team names array when number of teams changes
   useEffect(() => {
@@ -100,9 +110,33 @@ export function ConfigScreen() {
     });
   }, [numberOfRounds]);
 
+  // Persist config to localStorage on every change
+  useEffect(() => {
+    saveConfig(config);
+  }, [config]);
+
+  // Persist loadedCharacters to localStorage on every change
+  useEffect(() => {
+    if (loadedCharacters.length > 0) {
+      savePeople(loadedCharacters);
+    }
+  }, [loadedCharacters]);
+
   // Restore validation status if characters are already loaded
   useEffect(() => {
-    if (state.characters.length > 0 && loadedCharacters.length === 0) {
+    if (loadedCharacters.length > 0) {
+      const characters = loadedCharacters;
+      const categories = [...new Set(characters.map((c) => c.category))].sort();
+      const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
+
+      setValidationStatus({
+        isValid: true,
+        characterCount: characters.length,
+        categories,
+        difficulties,
+      });
+    } else if (state.characters.length > 0) {
+      // Fallback to state.characters if loadedCharacters is empty
       const characters = state.characters;
       setLoadedCharacters(characters);
       const categories = [...new Set(characters.map((c) => c.category))].sort();
@@ -120,10 +154,12 @@ export function ConfigScreen() {
 
   const handleUrlChange = (url: string) => {
     setConfig((prev) => ({ ...prev, googleSheetUrl: url }));
-    // Clear validation status when URL changes
+    // Clear validation status and saved characters when URL changes
     if (!url) {
       setValidationStatus(null);
       setLoadedCharacters([]);
+      // Clear saved characters from localStorage
+      savePeople([]);
     }
   };
 
