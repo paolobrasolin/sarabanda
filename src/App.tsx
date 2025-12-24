@@ -5,13 +5,12 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { PlayerScreen } from './components/PlayerScreen';
 import { RemoteScreen } from './components/RemoteScreen';
 import { SplashScreen } from './components/SplashScreen';
-import { GameProvider, useGame } from './hooks/useGame';
+import { GameProvider } from './hooks/useGame';
 
 type AppMode = 'splash' | 'config' | 'remote' | 'player';
 
 const AppContent = () => {
   const [mode, setMode] = useState<AppMode>('splash');
-  const { dispatch } = useGame();
 
   useEffect(() => {
     // Read mode from URL hash
@@ -23,17 +22,12 @@ const AppContent = () => {
     }
   }, []);
 
-  const handleStartGame = () => {
-    dispatch({ type: 'START_GAME' });
-    // Navigate to game screen (could be a separate mode or handled differently)
-  };
-
   return (
     <div className="app">
       {mode === 'splash' ? (
         <SplashScreen />
       ) : mode === 'config' ? (
-        <ConfigScreen onStartGame={handleStartGame} />
+        <ConfigScreen />
       ) : mode === 'remote' ? (
         <RemoteScreen />
       ) : mode === 'player' ? (
