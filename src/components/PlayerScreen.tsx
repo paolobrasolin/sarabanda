@@ -1,6 +1,7 @@
 import { Role } from '@ariakit/react';
-import { useStorage } from '../hooks/useStorage';
-import type { GameState } from '../types';
+import { StorageProvider, useStorage } from '../hooks/useStorage';
+import type { Character, GameState } from '../types';
+import { initialGameState } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -8,7 +9,7 @@ import { STORAGE_KEYS } from '../utils/storageKeys';
  * This screen is read-only and listens to localStorage changes
  * to stay in sync with RemoteScreen updates.
  */
-export function PlayerScreen() {
+function PlayerScreenContent() {
   const { value: state } = useStorage<GameState>(STORAGE_KEYS.STATUS);
 
   // Show loading/empty state if no game state is available
@@ -104,5 +105,23 @@ export function PlayerScreen() {
         )}
       </section>
     </div>
+  );
+}
+
+export function PlayerScreen() {
+  return (
+    <StorageProvider<GameState>
+      storageKey={STORAGE_KEYS.STATUS}
+      readOnly={true}
+      defaultValue={initialGameState}
+    >
+      <StorageProvider<Character[]>
+        storageKey={STORAGE_KEYS.PEOPLE}
+        readOnly={true}
+        defaultValue={null}
+      >
+        <PlayerScreenContent />
+      </StorageProvider>
+    </StorageProvider>
   );
 }

@@ -16,14 +16,14 @@ import {
   SelectProvider,
 } from '@ariakit/react';
 import React, { useEffect, useState } from 'react';
-import { useStorage } from '../hooks/useStorage';
+import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameState } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
+import { initialGameConfig, initialGameState } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
-import { initialGameConfig } from '../utils/initialState';
 import { updateCharacters, updateConfig } from '../utils/stateUpdates';
 
-export function ConfigScreen() {
+function ConfigScreenContent() {
   const { value: gameState, update: updateStateStorage } = useStorage<GameState>(STORAGE_KEYS.STATUS);
   const { value: savedConfig, update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { value: savedPeople, update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
@@ -487,5 +487,29 @@ export function ConfigScreen() {
         </FormProvider>
       </section>
     </div>
+  );
+}
+
+export function ConfigScreen() {
+  return (
+    <StorageProvider<GameConfig>
+      storageKey={STORAGE_KEYS.CONFIG}
+      readOnly={false}
+      defaultValue={initialGameConfig}
+    >
+      <StorageProvider<Character[]>
+        storageKey={STORAGE_KEYS.PEOPLE}
+        readOnly={false}
+        defaultValue={null}
+      >
+        <StorageProvider<GameState>
+          storageKey={STORAGE_KEYS.STATUS}
+          readOnly={true}
+          defaultValue={initialGameState}
+        >
+          <ConfigScreenContent />
+        </StorageProvider>
+      </StorageProvider>
+    </StorageProvider>
   );
 }

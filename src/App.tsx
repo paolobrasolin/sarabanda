@@ -5,10 +5,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { PlayerScreen } from './components/PlayerScreen';
 import { RemoteScreen } from './components/RemoteScreen';
 import { SplashScreen } from './components/SplashScreen';
-import { StorageProvider } from './hooks/useStorage';
-import type { Character, GameConfig, GameState } from './types';
-import { initialGameConfig, initialGameState } from './utils/initialState';
-import { STORAGE_KEYS } from './utils/storageKeys';
 
 type AppMode = 'splash' | 'config' | 'remote' | 'player';
 
@@ -25,64 +21,14 @@ const AppContent = () => {
     }
   }, []);
 
-  // Render content with appropriate StorageProviders based on mode
-  const renderContent = () => {
-    if (mode === 'splash') {
-      return <SplashScreen />;
-    }
-
-    if (mode === 'remote') {
-      return (
-        <StorageProvider<GameState>
-          storageKey={STORAGE_KEYS.STATUS}
-          readOnly={false}
-          defaultValue={initialGameState}
-        >
-          <StorageProvider<Character[]>
-            storageKey={STORAGE_KEYS.PEOPLE}
-            readOnly={true}
-            defaultValue={null}
-          >
-            <RemoteScreen />
-          </StorageProvider>
-        </StorageProvider>
-      );
-    }
-
-    if (mode === 'player') {
-      return (
-        <StorageProvider<GameState>
-          storageKey={STORAGE_KEYS.STATUS}
-          readOnly={true}
-          defaultValue={initialGameState}
-        >
-          <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
-            <PlayerScreen />
-          </StorageProvider>
-        </StorageProvider>
-      );
-    }
-
-    if (mode === 'config') {
-      return (
-        <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={false} defaultValue={initialGameConfig}>
-          <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={false} defaultValue={null}>
-            <StorageProvider<GameState>
-              storageKey={STORAGE_KEYS.STATUS}
-              readOnly={true}
-              defaultValue={initialGameState}
-            >
-              <ConfigScreen />
-            </StorageProvider>
-          </StorageProvider>
-        </StorageProvider>
-      );
-    }
-
-    return null;
-  };
-
-  return <div className="app">{renderContent()}</div>;
+  return (
+    <div className="app">
+      {mode === 'splash' && <SplashScreen />}
+      {mode === 'config' && <ConfigScreen />}
+      {mode === 'remote' && <RemoteScreen />}
+      {mode === 'player' && <PlayerScreen />}
+    </div>
+  );
 };
 
 const App = () => {
