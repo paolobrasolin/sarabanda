@@ -22,7 +22,7 @@ export interface GameConfig {
 export interface GameState {
   config: GameConfig;
   characters: Character[];
-  usedCharacters: Set<string>;
+  usedCharacters: string[];
   currentRound: number;
   currentCategory: string | null;
   currentCharacter: Character | null;

@@ -15,19 +15,19 @@ import {
   SelectPopover,
   SelectProvider,
 } from '@ariakit/react';
-import { useEffect, useState } from 'react';
-import { useGame } from '../hooks/useGame';
-import type { Character, GameConfig } from '../types';
+import React, { useEffect, useState } from 'react';
+import { useStorage } from '../hooks/useStorage';
+import type { Character, GameConfig, GameState } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
-import {
-  loadConfig,
-  saveConfig,
-  loadPeople,
-  savePeople,
-} from '../utils/storage';
+import { STORAGE_KEYS } from '../utils/storageKeys';
+import { initialGameConfig } from '../utils/initialState';
+import { updateCharacters, updateConfig } from '../utils/stateUpdates';
 
 export function ConfigScreen() {
-  const { state, dispatch } = useGame();
+  const { value: gameState, update: updateStateStorage } = useStorage<GameState>(STORAGE_KEYS.STATUS);
+  const { value: savedConfig, update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
+  const { value: savedPeople, update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const [validationStatus, setValidationStatus] = useState<{
@@ -37,14 +37,41 @@ export function ConfigScreen() {
     difficulties: string[];
   } | null>(null);
 
+  // Initialize from localStorage directly, not from storage context
+  // This prevents circular updates
   const [loadedCharacters, setLoadedCharacters] = useState<Character[]>(() => {
-    // Try to load from localStorage on mount
-    return loadPeople() || [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PEOPLE);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [config, setConfig] = useState<GameConfig>(() => {
-    // Try to load from localStorage first, fallback to state.config
-    const savedConfig = loadConfig();
-    const initialConfig = savedConfig || state.config;
+    // Try to load from localStorage directly first, then fallback
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CONFIG);
+      if (saved) {
+        const parsed = JSON.parse(saved) as GameConfig;
+        const teamCount = parsed.teamNames?.length || 2;
+        const nthTurnDurations = Array.isArray(parsed.nthTurnDurations) ? parsed.nthTurnDurations : [];
+        const nthTurnScores = Array.isArray(parsed.nthTurnScores) ? parsed.nthTurnScores : [];
+        return {
+          ...parsed,
+          nthTurnDurations:
+            nthTurnDurations.length === teamCount
+              ? nthTurnDurations
+              : Array.from({ length: teamCount }, (_, i) => nthTurnDurations[i] || nthTurnDurations[0] || 60),
+          nthTurnScores:
+            nthTurnScores.length === teamCount
+              ? nthTurnScores
+              : Array.from({ length: teamCount }, (_, i) => nthTurnScores[i] || nthTurnScores[0] || 0.5),
+        };
+      }
+    } catch {
+      // Fall through to default
+    }
+    const initialConfig = gameState?.config || initialGameConfig;
     const teamCount = initialConfig.teamNames?.length || 2;
     const nthTurnDurations = Array.isArray(initialConfig.nthTurnDurations) ? initialConfig.nthTurnDurations : [];
     const nthTurnScores = Array.isArray(initialConfig.nthTurnScores) ? initialConfig.nthTurnScores : [];
@@ -111,15 +138,30 @@ export function ConfigScreen() {
   }, [numberOfRounds]);
 
   // Persist config to localStorage on every change
+  // Use a ref to track the last saved config to avoid infinite loops
+  const lastSavedConfigRef = React.useRef<string | null>(null);
   useEffect(() => {
-    saveConfig(config);
+    const configString = JSON.stringify(config);
+    // Only update if config actually changed
+    if (lastSavedConfigRef.current !== configString) {
+      lastSavedConfigRef.current = configString;
+      updateConfigStorage(config);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
   // Persist loadedCharacters to localStorage on every change
+  const lastSavedPeopleRef = React.useRef<string | null>(null);
   useEffect(() => {
     if (loadedCharacters.length > 0) {
-      savePeople(loadedCharacters);
+      const peopleString = JSON.stringify(loadedCharacters);
+      // Only update if characters actually changed
+      if (lastSavedPeopleRef.current !== peopleString) {
+        lastSavedPeopleRef.current = peopleString;
+        updatePeopleStorage(loadedCharacters);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedCharacters]);
 
   // Restore validation status if characters are already loaded
@@ -135,9 +177,9 @@ export function ConfigScreen() {
         categories,
         difficulties,
       });
-    } else if (state.characters.length > 0) {
-      // Fallback to state.characters if loadedCharacters is empty
-      const characters = state.characters;
+    } else if (gameState?.characters && gameState.characters.length > 0) {
+      // Fallback to gameState.characters if loadedCharacters is empty
+      const characters = gameState.characters;
       setLoadedCharacters(characters);
       const categories = [...new Set(characters.map((c) => c.category))].sort();
       const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
@@ -159,7 +201,7 @@ export function ConfigScreen() {
       setValidationStatus(null);
       setLoadedCharacters([]);
       // Clear saved characters from localStorage
-      savePeople([]);
+      updatePeopleStorage([]);
     }
   };
 
@@ -208,8 +250,14 @@ export function ConfigScreen() {
   };
 
   const handleStartGame = () => {
-    dispatch({ type: 'SET_CONFIG', payload: config });
-    dispatch({ type: 'SET_CHARACTERS', payload: loadedCharacters });
+    if (!gameState) return;
+
+    // Update game state with config and characters
+    let newState = updateConfig(gameState, config);
+    newState = updateCharacters(newState, loadedCharacters);
+
+    // Save to storage
+    updateStateStorage(newState);
   };
 
   const canStartGame =

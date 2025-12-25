@@ -1,5 +1,7 @@
 import { Role } from '@ariakit/react';
-import { useGameState } from '../hooks/useGameState';
+import { useStorage } from '../hooks/useStorage';
+import type { GameState } from '../types';
+import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
  * PlayerScreen - Passive display screen for players
@@ -7,7 +9,7 @@ import { useGameState } from '../hooks/useGameState';
  * to stay in sync with RemoteScreen updates.
  */
 export function PlayerScreen() {
-  const { state } = useGameState();
+  const { value: state } = useStorage<GameState>(STORAGE_KEYS.STATUS);
 
   // Show loading/empty state if no game state is available
   if (!state) {
@@ -89,7 +91,7 @@ export function PlayerScreen() {
                 <dt>Characters loaded:</dt>
                 <dd>{state.characters.length}</dd>
                 <dt>Used characters:</dt>
-                <dd>{state.usedCharacters.size}</dd>
+                <dd>{state.usedCharacters.length}</dd>
                 <dt>Current category:</dt>
                 <dd>{state.currentCategory || 'None'}</dd>
                 <dt>Timer running:</dt>
