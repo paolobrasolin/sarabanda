@@ -1204,3 +1204,169 @@ body {
     width: 100%;
   }
 }
+
+/* Player Screen */
+.player-screen {
+  min-height: 100vh;
+  background: #ffc160;
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.player-main-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 4rem);
+}
+
+.player-sidebar {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  flex-shrink: 0;
+  min-height: calc(100vh - 4rem);
+}
+
+.player-mascot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  flex-shrink: 0;
+}
+
+.player-mascot-image {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+  display: block;
+}
+
+.player-scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.player-scoreboard h3 {
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.player-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player-team-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.player-team-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.player-team-points {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+.player-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.player-timer h3 {
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.player-timer-value {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #000000;
+  line-height: 1;
+}
+
+.player-timer-value.timer-running {
+  color: #000000;
+}
+
+.player-timer-value.timer-stopped {
+  color: #000000;
+}
+
+
+.player-status-message {
+  text-align: center;
+  padding: 2rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  max-width: 600px;
+}
+
+.player-status-message h2 {
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.player-status-message p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.player-character-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 800px;
+  width: 100%;
+}
+
+.player-character-image {
+  max-width: 100%;
+  max-height: calc(100vh - 200px);
+  height: auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  object-fit: contain;
+}
+
+.player-category-badge {
+  background: var(--accent-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
