@@ -1,4 +1,3 @@
-import { Role } from '@ariakit/react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameState } from '../types';
 import { initialGameState } from '../utils/initialState';
@@ -16,8 +15,8 @@ function PlayerScreenContent() {
   if (!state) {
     return (
       <div className="game-screen">
-        <section className="game-header" aria-labelledby="game-title">
-          <h1 id="game-title">Quiz Game</h1>
+        <section className="game-header">
+          <h1>Quiz Game</h1>
         </section>
         <section className="game-content">
           <div className="game-not-started">
@@ -31,45 +30,36 @@ function PlayerScreenContent() {
 
   return (
     <div className="game-screen">
-      <section className="game-header" aria-labelledby="game-title">
-        <h1 id="game-title">Quiz Game</h1>
+      <section className="game-header">
+        <h1>Quiz Game</h1>
         <div className="game-info">
-          <Role role="status" aria-live="polite" aria-atomic="true">
-            {state.isGameActive ? (
-              <>
-                Round {state.currentRound} of {state.config.numberOfRounds}
-              </>
-            ) : (
-              'Game Not Started'
-            )}
-          </Role>
+          {state.isGameActive ? (
+            <>
+              Round {state.currentRound} of {state.config.numberOfRounds}
+            </>
+          ) : (
+            'Game Not Started'
+          )}
         </div>
       </section>
 
-      <section className="scoreboard" aria-labelledby="scores-heading">
-        <h2 id="scores-heading">Scores</h2>
-        <div className="teams" role="list" aria-label="Team scores">
+      <section className="scoreboard">
+        <h2>Scores</h2>
+        <div className="teams">
           {state.config.teamNames.map((team) => (
-            <div
-              key={team}
-              className="team-score"
-              role="listitem"
-              aria-label={`${team}: ${state.scores[team] || 0} points`}
-            >
+            <div key={team} className="team-score">
               <span className="team-name">{team}</span>
-              <span className="team-points" aria-label={`${state.scores[team] || 0} points`}>
-                {state.scores[team] || 0}
-              </span>
+              <span className="team-points">{state.scores[team] || 0}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="game-content" aria-labelledby="game-content-heading">
+      <section className="game-content">
         {/* Timer display - always show for POC testing */}
         {(state.timeRemaining > 0 || state.isTimerRunning) && (
-          <section className="timer-display" aria-labelledby="timer-heading">
-            <h3 id="timer-heading">Timer</h3>
+          <section className="timer-display">
+            <h3>Timer</h3>
             <div className={`timer-value ${state.isTimerRunning ? 'timer-running' : 'timer-stopped'}`}>
               {state.timeRemaining}s
             </div>
@@ -79,15 +69,15 @@ function PlayerScreenContent() {
 
         {!state.isGameActive ? (
           <div className="game-not-started">
-            <h2 id="game-content-heading">Ready to Play</h2>
+            <h2>Ready to Play</h2>
             <p>Configure your game settings and start playing!</p>
           </div>
         ) : (
           <div className="game-active">
-            <h2 id="game-content-heading">Game Active</h2>
+            <h2>Game Active</h2>
 
-            <section className="debug-info" aria-labelledby="debug-heading">
-              <h3 id="debug-heading">Debug Info</h3>
+            <section className="debug-info">
+              <h3>Debug Info</h3>
               <dl>
                 <dt>Characters loaded:</dt>
                 <dd>{state.characters.length}</dd>

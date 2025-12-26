@@ -1,4 +1,4 @@
-import { Button, Role } from '@ariakit/react';
+import { Button } from '@ariakit/react';
 import { useEffect, useRef } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameState } from '../types';
@@ -131,10 +131,10 @@ function RemoteScreenContent() {
 
   return (
     <div className="remote-screen">
-      <section className="remote-header" aria-labelledby="remote-title">
-        <h1 id="remote-title">Game Master Control</h1>
+      <section className="remote-header">
+        <h1>Game Master Control</h1>
         <div className="remote-info">
-          <Role role="status" aria-live="polite" aria-atomic="true">
+          <div>
             {state.isGameActive ? (
               <>
                 Round {state.currentRound} of {state.config.numberOfRounds}
@@ -142,12 +142,12 @@ function RemoteScreenContent() {
             ) : (
               'Game Not Active'
             )}
-          </Role>
+          </div>
         </div>
       </section>
 
-      <section className="remote-controls" aria-labelledby="controls-heading">
-        <h2 id="controls-heading">Game Controls</h2>
+      <section className="remote-controls">
+        <h2>Game Controls</h2>
         <div className="control-buttons">
           {!state.isGameActive ? (
             <>
@@ -181,8 +181,8 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      <section className="remote-status" aria-labelledby="status-heading">
-        <h2 id="status-heading">Game Status</h2>
+      <section className="remote-status">
+        <h2>Game Status</h2>
         <dl className="status-list">
           <dt>Characters loaded:</dt>
           <dd>{state.characters.length}</dd>
@@ -197,27 +197,20 @@ function RemoteScreenContent() {
         </dl>
       </section>
 
-      <section className="remote-scores" aria-labelledby="scores-heading">
-        <h2 id="scores-heading">Scores</h2>
-        <div className="teams" role="list" aria-label="Team scores">
+      <section className="remote-scores">
+        <h2>Scores</h2>
+        <div className="teams">
           {state.config.teamNames.map((team) => (
-            <div
-              key={team}
-              className="team-score"
-              role="listitem"
-              aria-label={`${team}: ${state.scores[team] || 0} points`}
-            >
+            <div key={team} className="team-score">
               <span className="team-name">{team}</span>
-              <span className="team-points" aria-label={`${state.scores[team] || 0} points`}>
-                {state.scores[team] || 0}
-              </span>
+              <span className="team-points">{state.scores[team] || 0}</span>
             </div>
           ))}
         </div>
       </section>
 
       {state.characters.length === 0 && (
-        <section className="remote-warning" role="alert">
+        <section className="remote-warning">
           <p>
             <strong>No characters loaded.</strong> Please go to the Config screen to load characters from a Google
             Sheet.
@@ -225,8 +218,8 @@ function RemoteScreenContent() {
         </section>
       )}
 
-      <section className="remote-info" aria-labelledby="info-heading">
-        <h2 id="info-heading">Information</h2>
+      <section className="remote-info">
+        <h2>Information</h2>
         <p>
           This is the Game Master control interface. All changes made here will be reflected on the Player screen in
           real-time via localStorage synchronization.

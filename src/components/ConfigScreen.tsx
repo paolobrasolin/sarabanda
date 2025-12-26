@@ -248,7 +248,7 @@ function ConfigScreenContent() {
 
   return (
     <div className="configuration-screen">
-      <section className="config-section" aria-labelledby="sheet-config-heading">
+      <section className="config-section">
         <FormProvider>
           <Form>
             <FormGroup>
@@ -262,12 +262,7 @@ function ConfigScreenContent() {
                   placeholder="https://docs.google.com/spreadsheets/d/..."
                   disabled={isLoading}
                 />
-                <Button
-                  className="reload-btn"
-                  onClick={handleLoadSheet}
-                  disabled={isLoading || !config.googleSheetUrl}
-                  aria-label="Load Google Sheet"
-                >
+                <Button className="reload-btn" onClick={handleLoadSheet} disabled={isLoading || !config.googleSheetUrl}>
                   {isLoading ? 'Loading...' : 'Load'}
                 </Button>
               </div>
