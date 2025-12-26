@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import { ConfigScreen } from './components/ConfigScreen';
+import { ConfigDialog } from './components/ConfigDialog';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PlayerScreen } from './components/PlayerScreen';
 import { RemoteScreen } from './components/RemoteScreen';
@@ -24,7 +24,7 @@ const AppContent = () => {
   return (
     <div className="app">
       {mode === 'splash' && <SplashScreen />}
-      {mode === 'config' && <ConfigScreen />}
+      {mode === 'config' && <ConfigDialog />}
       {mode === 'remote' && <RemoteScreen />}
       {mode === 'player' && <PlayerScreen />}
     </div>

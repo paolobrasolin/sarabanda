@@ -494,7 +494,7 @@ function ConfigModalContent({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function ConfigScreen() {
+export function ConfigDialog() {
   return (
     <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={false} defaultValue={initialGameConfig}>
       <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={false} defaultValue={null}>

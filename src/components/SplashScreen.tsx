@@ -14,9 +14,6 @@ export function SplashScreen() {
         <div className="splash-left">
           <h1 className="splash-title">Sarabanda</h1>
           <div className="splash-buttons">
-            <Button className="splash-btn splash-btn-primary" onClick={() => openMode('config')}>
-              Config
-            </Button>
             <Button className="splash-btn splash-btn-primary" onClick={() => openMode('remote')}>
               Remote
             </Button>

@@ -1,5 +1,6 @@
 import { Button } from '@ariakit/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ConfigModal } from './ConfigDialog';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameStatus } from '../types';
 import { initialGameStatus } from '../utils/initialState';
@@ -17,6 +18,7 @@ function RemoteScreenContent() {
   const timerIntervalRef = useRef<number | null>(null);
   const timeRemainingRef = useRef(state?.timeRemaining ?? 0);
   const stateRef = useRef(state);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   // Sync characters from PEOPLE storage to STATUS if STATUS doesn't have them
   useEffect(() => {
@@ -132,7 +134,20 @@ function RemoteScreenContent() {
   return (
     <div className="remote-screen">
       <section className="remote-header">
-        <h1>Game Master Control</h1>
+        <div className="remote-header-top">
+          <h1>Game Master Control</h1>
+          <button
+            className="config-btn"
+            onClick={() => {
+              console.log('Config button clicked, opening modal');
+              setIsConfigModalOpen(true);
+            }}
+            aria-label="Open configuration"
+            title="Open configuration"
+          >
+            Config
+          </button>
+        </div>
         <div className="remote-info">
           <div>
             {state.isGameActive ? (
@@ -226,6 +241,16 @@ function RemoteScreenContent() {
         </p>
         <p>Full game controls (timer, hints, scoring, etc.) will be implemented in Phase 4.</p>
       </section>
+
+      {isConfigModalOpen && (
+        <ConfigModal 
+          open={isConfigModalOpen} 
+          onClose={() => {
+            console.log('Config modal closing');
+            setIsConfigModalOpen(false);
+          }} 
+        />
+      )}
     </div>
   );
 }
