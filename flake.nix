@@ -12,7 +12,7 @@
         pkgs = import nixpkgs {inherit system;};
       in {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [nodejs pnpm];
+          packages = with pkgs; [nodejs pnpm biome];
         };
         packages = rec {
           sarabanda = pkgs.stdenv.mkDerivation (finalAttrs: {

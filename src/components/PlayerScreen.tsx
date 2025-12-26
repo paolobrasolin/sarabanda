@@ -40,7 +40,7 @@ function PlayerScreenContent() {
                 Round {state.currentRound} of {state.config.numberOfRounds}
               </>
             ) : (
-              <>Game Not Started</>
+              'Game Not Started'
             )}
           </Role>
         </div>
@@ -110,16 +110,8 @@ function PlayerScreenContent() {
 
 export function PlayerScreen() {
   return (
-    <StorageProvider<GameState>
-      storageKey={STORAGE_KEYS.STATUS}
-      readOnly={true}
-      defaultValue={initialGameState}
-    >
-      <StorageProvider<Character[]>
-        storageKey={STORAGE_KEYS.PEOPLE}
-        readOnly={true}
-        defaultValue={null}
-      >
+    <StorageProvider<GameState> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameState}>
+      <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
         <PlayerScreenContent />
       </StorageProvider>
     </StorageProvider>

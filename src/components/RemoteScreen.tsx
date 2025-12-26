@@ -3,8 +3,8 @@ import { useEffect, useRef } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameState } from '../types';
 import { initialGameState } from '../utils/initialState';
-import { STORAGE_KEYS } from '../utils/storageKeys';
 import { endGame, setTimeRemaining, setTimerRunning, startGame, updateCharacters } from '../utils/stateUpdates';
+import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
  * RemoteScreen - Game Master control interface
@@ -140,7 +140,7 @@ function RemoteScreenContent() {
                 Round {state.currentRound} of {state.config.numberOfRounds}
               </>
             ) : (
-              <>Game Not Active</>
+              'Game Not Active'
             )}
           </Role>
         </div>
@@ -239,16 +239,8 @@ function RemoteScreenContent() {
 
 export function RemoteScreen() {
   return (
-    <StorageProvider<GameState>
-      storageKey={STORAGE_KEYS.STATUS}
-      readOnly={false}
-      defaultValue={initialGameState}
-    >
-      <StorageProvider<Character[]>
-        storageKey={STORAGE_KEYS.PEOPLE}
-        readOnly={true}
-        defaultValue={null}
-      >
+    <StorageProvider<GameState> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameState}>
+      <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
         <RemoteScreenContent />
       </StorageProvider>
     </StorageProvider>

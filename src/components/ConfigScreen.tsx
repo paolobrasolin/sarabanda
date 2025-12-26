@@ -1,12 +1,10 @@
 import {
   Button,
   Form,
-  FormDescription,
   FormGroup,
   FormInput,
   FormLabel,
   FormProvider,
-  Role,
   Select,
   SelectArrow,
   SelectItem,
@@ -20,8 +18,8 @@ import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameState } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
 import { initialGameConfig, initialGameState } from '../utils/initialState';
-import { STORAGE_KEYS } from '../utils/storageKeys';
 import { updateCharacters, updateConfig } from '../utils/stateUpdates';
+import { STORAGE_KEYS } from '../utils/storageKeys';
 
 function ConfigScreenContent() {
   const { value: gameState, update: updateStateStorage } = useStorage<GameState>(STORAGE_KEYS.STATUS);
@@ -148,7 +146,7 @@ function ConfigScreenContent() {
       updateConfigStorage(config);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config]);
+  }, [config, updateConfigStorage]);
 
   // Persist loadedCharacters to localStorage on every change
   const lastSavedPeopleRef = React.useRef<string | null>(null);
@@ -162,7 +160,7 @@ function ConfigScreenContent() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadedCharacters]);
+  }, [loadedCharacters, updatePeopleStorage]);
 
   // Restore validation status if characters are already loaded
   useEffect(() => {
@@ -192,7 +190,7 @@ function ConfigScreenContent() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount
+  }, [gameState.characters, loadedCharacters]); // Only run on mount
 
   const handleUrlChange = (url: string) => {
     setConfig((prev) => ({ ...prev, googleSheetUrl: url }));
@@ -249,7 +247,7 @@ function ConfigScreenContent() {
     }
   };
 
-  const handleStartGame = () => {
+  const _handleStartGame = () => {
     if (!gameState) return;
 
     // Update game state with config and characters
@@ -260,7 +258,7 @@ function ConfigScreenContent() {
     updateStateStorage(newState);
   };
 
-  const canStartGame =
+  const _canStartGame =
     validationStatus?.isValid &&
     (config.teamNames?.length || 0) >= 2 &&
     (config.selectedDifficulties?.length || 0) >= 1 &&
@@ -492,21 +490,9 @@ function ConfigScreenContent() {
 
 export function ConfigScreen() {
   return (
-    <StorageProvider<GameConfig>
-      storageKey={STORAGE_KEYS.CONFIG}
-      readOnly={false}
-      defaultValue={initialGameConfig}
-    >
-      <StorageProvider<Character[]>
-        storageKey={STORAGE_KEYS.PEOPLE}
-        readOnly={false}
-        defaultValue={null}
-      >
-        <StorageProvider<GameState>
-          storageKey={STORAGE_KEYS.STATUS}
-          readOnly={true}
-          defaultValue={initialGameState}
-        >
+    <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={false} defaultValue={initialGameConfig}>
+      <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={false} defaultValue={null}>
+        <StorageProvider<GameState> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameState}>
           <ConfigScreenContent />
         </StorageProvider>
       </StorageProvider>

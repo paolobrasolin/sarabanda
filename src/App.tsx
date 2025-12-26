@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import { ConfigScreen } from './components/ConfigScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
