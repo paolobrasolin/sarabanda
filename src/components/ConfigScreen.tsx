@@ -28,7 +28,8 @@ function ConfigDialogContent() {
   const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { value: loadedCharacters } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
   
-  const isConfigLocked = gameStatus?.phase === 'ready';
+  // Lock config during choosing and guessing phases (game is active)
+  const isConfigLocked = gameStatus?.phase === 'choosing' || gameStatus?.phase === 'guessing';
 
   // Compute available categories and difficulties from loaded characters
   const availableCategories = React.useMemo(() => {
@@ -135,7 +136,7 @@ function ConfigDialogContent() {
   // Use a ref to track the last saved config to avoid infinite loops
   const lastSavedConfigRef = React.useRef<string | null>(null);
   useEffect(() => {
-    // Don't save config if locked (ready phase)
+    // Don't save config if locked (game is active)
     if (isConfigLocked) {
       return;
     }
@@ -154,7 +155,7 @@ function ConfigDialogContent() {
       {isConfigLocked && (
         <section className="config-warning">
           <p>
-            <strong>Configuration is locked.</strong> The game is in 'ready' phase. Please go back to setup phase to modify configuration.
+            <strong>Configuration is locked.</strong> The game is active. Please end the game to modify configuration.
           </p>
         </section>
       )}

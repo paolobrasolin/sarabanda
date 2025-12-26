@@ -7,13 +7,17 @@ import type { Character, GameConfig, GameStatus } from '../types';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import {
   endGame,
+  markCharacterUsed,
+  rerollCharacter,
   setTimeRemaining,
   setTimerRunning,
   startGame,
-  transitionToReady,
-  transitionToSetup,
+  transitionToChoosing,
+  transitionToGuessing,
+  transitionToPrepping,
   updateCharacters,
 } from '../utils/stateUpdates';
+import { createCharacterId } from '../utils/gameHelpers';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -31,14 +35,28 @@ function RemoteScreenContent() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isPeopleDialogOpen, setIsPeopleDialogOpen] = useState(false);
 
-  // Migrate old state format: ensure phase and gameCharacters exist
+  // Migrate old state format: ensure phase exists and migrate old phases
   useEffect(() => {
-    if (state && (!('phase' in state) || !('gameCharacters' in state))) {
+    if (state && (!('phase' in state) || (state as any).phase === 'setup' || (state as any).phase === 'ready')) {
+      const oldPhase = (state as any).phase;
+      let newPhase: 'prepping' | 'choosing' | 'guessing' = 'prepping';
+      
+      // Migrate old phases
+      if (oldPhase === 'ready') {
+        // If we were in ready, we should go back to prepping since we removed that phase
+        newPhase = 'prepping';
+      } else if (oldPhase === 'setup') {
+        newPhase = 'prepping';
+      }
+
       const migratedState = {
         ...state,
-        phase: (state as any).phase || 'setup',
-        gameCharacters: (state as any).gameCharacters || [],
+        phase: newPhase,
       };
+      // Remove gameCharacters if it exists (we don't use it anymore)
+      if ('gameCharacters' in migratedState) {
+        delete (migratedState as any).gameCharacters;
+      }
       updateState(migratedState);
     }
   }, [state, updateState]);
@@ -138,9 +156,15 @@ function RemoteScreenContent() {
   }
 
   // Ensure phase is always set (fallback for migration)
-  const currentPhase = state.phase || 'setup';
+  const currentPhase = state.phase || 'prepping';
 
-  const handlePrepareGame = () => {
+  const handleBackToPrepping = () => {
+    if (confirm('Are you sure you want to go back to prepping? This will clear all game progress.')) {
+      updateState(transitionToPrepping(state));
+    }
+  };
+
+  const handleStartGame = () => {
     if (!config) {
       alert('Configuration not loaded. Please configure the game first.');
       return;
@@ -157,7 +181,7 @@ function RemoteScreenContent() {
     // Merge config into state for the transition function
     const stateWithConfig = { ...state, config };
 
-    // Debug: Check if any characters match the selected criteria
+    // Check if any characters match the selected criteria
     const availableCharacters = stateWithConfig.characters.filter(
       (char) =>
         config.selectedDifficulties.includes(char.difficulty) && config.selectedCategories.includes(char.category),
@@ -177,27 +201,44 @@ function RemoteScreenContent() {
       return;
     }
 
-    const newState = transitionToReady(stateWithConfig);
-    if (newState.phase === 'setup') {
-      alert('Failed to generate game characters. Please check your configuration and try again.');
+    const newState = startGame(stateWithConfig);
+    if (newState.phase === 'prepping') {
+      alert('Failed to start game. Please check your configuration and try again.');
       return;
     }
     updateState(newState);
   };
 
-  const handleBackToSetup = () => {
-    if (confirm('Are you sure you want to go back to setup? This will clear all game preparation.')) {
-      updateState(transitionToSetup(state));
-    }
-  };
-
-  const handleStartGame = () => {
-    const currentPhase = state.phase || 'setup';
-    if (currentPhase !== 'ready') {
-      alert('Please prepare the game first.');
+  const handleConfirmCharacter = () => {
+    if (currentPhase !== 'choosing') {
       return;
     }
-    updateState(startGame(state));
+    updateState(transitionToGuessing(state));
+  };
+
+  const handleRerollCharacter = () => {
+    if (currentPhase !== 'choosing') {
+      return;
+    }
+    const newState = rerollCharacter(state);
+    if (!newState.currentCharacter) {
+      alert('No characters available to re-roll. Please check your configuration.');
+      return;
+    }
+    updateState(newState);
+  };
+
+  const handleNextRound = () => {
+    if (currentPhase !== 'guessing') {
+      return;
+    }
+    // Mark current character as used
+    let newState = state;
+    if (state.currentCharacter) {
+      const characterId = createCharacterId(state.currentCharacter);
+      newState = markCharacterUsed(state, characterId);
+    }
+    updateState(transitionToChoosing(newState));
   };
 
   const handleEndGame = () => {
@@ -256,28 +297,7 @@ function RemoteScreenContent() {
           >
             Config
           </button>
-          {currentPhase === 'setup' ? (
-            <Button
-              onClick={handlePrepareGame}
-              className="control-btn control-btn-primary"
-              disabled={state.characters.length === 0}
-            >
-              Prepare Game
-            </Button>
-          ) : currentPhase === 'ready' ? (
-            <>
-              <Button
-                onClick={handleStartGame}
-                className="control-btn control-btn-primary"
-                disabled={state.gameCharacters.length === 0}
-              >
-                Start Game
-              </Button>
-              <Button onClick={handleBackToSetup} className="control-btn">
-                Back to Setup
-              </Button>
-            </>
-          ) : !state.isGameActive ? (
+          {currentPhase === 'prepping' ? (
             <>
               <Button
                 onClick={handleStartGame}
@@ -286,11 +306,29 @@ function RemoteScreenContent() {
               >
                 Start Game
               </Button>
+            </>
+          ) : currentPhase === 'choosing' ? (
+            <>
+              <Button onClick={handleBackToPrepping} className="control-btn">
+                Back to Prepping
+              </Button>
+            </>
+          ) : currentPhase === 'guessing' ? (
+            <>
+              <Button
+                onClick={handleNextRound}
+                className="control-btn control-btn-primary"
+              >
+                Next Round
+              </Button>
+              <Button onClick={handleEndGame} className="control-btn control-btn-danger">
+                End Game
+              </Button>
               <Button
                 onClick={handleStartStopTimer}
                 className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
               >
-                {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'} (POC Test)
+                {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
               </Button>
             </>
           ) : (
@@ -309,35 +347,59 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      {currentPhase === 'ready' && (
-        <section className="remote-game-characters">
-          <h2>Game Characters ({(state.gameCharacters || []).length} total)</h2>
-          <div className="game-characters-table-container">
-            <table className="game-characters-table">
-              <thead>
-                <tr>
-                  <th>Round</th>
-                  <th>Category</th>
-                  <th>Name</th>
-                  <th>Difficulty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(state.gameCharacters || []).map((gc, index) => (
-                  <tr key={`${gc.round}-${index}`}>
-                    <td>{gc.round}</td>
-                    <td>{gc.category}</td>
-                    <td>
-                      {gc.character.given_names} {gc.character.family_names}
-                    </td>
-                    <td>{gc.character.difficulty}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <section className="remote-character-preview">
+        <div className="character-preview-card">
+          <div className="character-preview-image">
+            {state.currentCharacter ? (
+              <img
+                src={state.currentCharacter.image_url}
+                alt={`${state.currentCharacter.given_names} ${state.currentCharacter.family_names}`}
+              />
+            ) : (
+              <div className="character-preview-placeholder">No character selected</div>
+            )}
           </div>
-        </section>
-      )}
+          <div className="character-preview-info">
+            <dl>
+              <div className="character-preview-field">
+                <dt>Given Names:</dt>
+                <dd>{state.currentCharacter?.given_names || '—'}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Family Names:</dt>
+                <dd>{state.currentCharacter?.family_names || '—'}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Category:</dt>
+                <dd>{state.currentCharacter?.category || '—'}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Difficulty:</dt>
+                <dd>{state.currentCharacter?.difficulty || '—'}</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="character-preview-actions">
+            <div className="character-preview-round">
+              {state.currentRound > 0 ? `Round ${state.currentRound}` : 'No round active'}
+            </div>
+            <Button
+              onClick={handleConfirmCharacter}
+              className="control-btn control-btn-primary"
+              disabled={currentPhase !== 'choosing' || !state.currentCharacter}
+            >
+              Confirm
+            </Button>
+            <Button
+              onClick={handleRerollCharacter}
+              className="control-btn"
+              disabled={currentPhase !== 'choosing' || !state.currentCharacter}
+            >
+              Re-roll
+            </Button>
+          </div>
+        </div>
+      </section>
 
       <section className="remote-status">
         <h2>Game Status</h2>
@@ -346,10 +408,10 @@ function RemoteScreenContent() {
           <dd>{currentPhase}</dd>
           <dt>Characters loaded:</dt>
           <dd>{state.characters.length}</dd>
-          {currentPhase === 'ready' && (
+          {currentPhase !== 'prepping' && (
             <>
-              <dt>Game characters:</dt>
-              <dd>{(state.gameCharacters || []).length}</dd>
+              <dt>Current round:</dt>
+              <dd>{state.currentRound}</dd>
             </>
           )}
           <dt>Used characters:</dt>
@@ -375,16 +437,15 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      {currentPhase === 'setup' && state.characters.length === 0 && (
+      {currentPhase === 'prepping' && state.characters.length === 0 && (
         <section className="remote-warning">
           <p>
-            <strong>No characters loaded.</strong> Please click "Load Characters" to load characters from a Google
-            Sheet.
+            <strong>No characters loaded.</strong> Please click "People" to load characters from a Google Sheet.
           </p>
         </section>
       )}
 
-      {currentPhase === 'setup' &&
+      {currentPhase === 'prepping' &&
         (config.selectedDifficulties.length === 0 || config.selectedCategories.length === 0) && (
           <section className="remote-warning">
             <p>

@@ -13,10 +13,9 @@ export const initialGameConfig: GameConfig = {
 };
 
 export const initialGameStatus: GameStatus = {
-  phase: 'setup',
+  phase: 'prepping',
   config: initialGameConfig,
   characters: [],
-  gameCharacters: [],
   usedCharacters: [],
   currentRound: 0,
   currentCategory: null,

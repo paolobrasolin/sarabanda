@@ -1,5 +1,5 @@
-import type { Character, GameCharacter, GameConfig, GamePhase, GameStatus, RoundResult } from '../types';
-import { createCharacterId } from './gameHelpers';
+import type { Character, GameConfig, GamePhase, GameStatus, RoundResult } from '../types';
+import { createCharacterId, getAvailableCharacters } from './gameHelpers';
 
 /**
  * State update helpers - pure functions that return new state
@@ -14,32 +14,132 @@ export function updateCharacters(state: GameStatus, characters: Character[]): Ga
   return { ...state, characters };
 }
 
-export function startGame(state: GameStatus): GameStatus {
-  // Can only start game from 'ready' phase
-  if (state.phase !== 'ready') {
+/**
+ * Rolls a random character for the current round from available characters.
+ * Returns null if no characters are available.
+ */
+export function rollCharacterForRound(state: GameStatus): Character | null {
+  const availableCharacters = getAvailableCharacters(state);
+  
+  if (availableCharacters.length === 0) {
+    return null;
+  }
+
+  // Randomly select a character
+  const randomIndex = Math.floor(Math.random() * availableCharacters.length);
+  return availableCharacters[randomIndex];
+}
+
+/**
+ * Transitions to choosing phase and rolls a character for the current round.
+ * Can be called from 'prepping' (to start the game) or from 'guessing' (to move to next round).
+ */
+export function transitionToChoosing(state: GameStatus): GameStatus {
+  // Validate that we have characters loaded
+  if (state.characters.length === 0) {
     return state;
   }
 
-  const initialScores = state.config.teamNames.reduce(
-    (acc, team) => {
-      acc[team] = 0;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+  // Validate that we have selected difficulties and categories
+  if (
+    state.config.selectedDifficulties.length === 0 ||
+    state.config.selectedCategories.length === 0
+  ) {
+    return state;
+  }
+
+  // If starting from prepping, initialize game state
+  let newState = state;
+  if (state.phase === 'prepping') {
+    const initialScores = state.config.teamNames.reduce(
+      (acc, team) => {
+        acc[team] = 0;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    newState = {
+      ...state,
+      isGameActive: true,
+      currentRound: 1,
+      scores: initialScores,
+      gameHistory: [],
+      hintsRevealed: 0,
+    };
+  } else if (state.phase === 'guessing') {
+    // Moving to next round - increment round number
+    newState = {
+      ...state,
+      currentRound: state.currentRound + 1,
+    };
+  }
+
+  // Roll a character for this round
+  const rolledCharacter = rollCharacterForRound(newState);
+  if (!rolledCharacter) {
+    return state; // Cannot transition if no characters available
+  }
+
+  return {
+    ...newState,
+    phase: 'choosing',
+    currentCharacter: rolledCharacter,
+    currentCategory: rolledCharacter.category,
+  };
+}
+
+/**
+ * Transitions from choosing to guessing phase, confirming the current character.
+ * This makes the character visible to players.
+ */
+export function transitionToGuessing(state: GameStatus): GameStatus {
+  if (state.phase !== 'choosing' || !state.currentCharacter) {
+    return state;
+  }
+
   return {
     ...state,
-    isGameActive: true,
-    currentRound: 1,
-    scores: initialScores,
-    gameHistory: [],
-    hintsRevealed: 0,
+    phase: 'guessing',
   };
+}
+
+/**
+ * Re-rolls the character for the current round.
+ * Only works in 'choosing' phase.
+ */
+export function rerollCharacter(state: GameStatus): GameStatus {
+  if (state.phase !== 'choosing') {
+    return state;
+  }
+
+  const rolledCharacter = rollCharacterForRound(state);
+  if (!rolledCharacter) {
+    return state; // Cannot re-roll if no characters available
+  }
+
+  return {
+    ...state,
+    currentCharacter: rolledCharacter,
+    currentCategory: rolledCharacter.category,
+  };
+}
+
+/**
+ * Starts the game from prepping phase.
+ * This is a convenience function that transitions to choosing and rolls the first character.
+ */
+export function startGame(state: GameStatus): GameStatus {
+  if (state.phase !== 'prepping') {
+    return state;
+  }
+
+  return transitionToChoosing(state);
 }
 
 export function endGame(state: GameStatus): GameStatus {
   return {
     ...state,
+    phase: 'prepping',
     isGameActive: false,
     isTimerRunning: false,
     currentCharacter: null,
@@ -95,99 +195,13 @@ export function setPhase(state: GameStatus, phase: GamePhase): GameStatus {
 }
 
 /**
- * Generates the list of characters for all rounds based on the current configuration.
- * Filters characters by selected difficulties and categories, then randomly selects
- * one character per round.
- */
-export function generateGameCharacters(state: GameStatus): GameCharacter[] {
-  const { config, characters } = state;
-  const { numberOfRounds, selectedDifficulties, selectedCategories } = config;
-
-  // Filter characters based on selected criteria
-  const availableCharacters = characters.filter(
-    (char) =>
-      selectedDifficulties.includes(char.difficulty) && selectedCategories.includes(char.category),
-  );
-
-  if (availableCharacters.length === 0) {
-    return [];
-  }
-
-  // If we have fewer characters than rounds, we'll reuse some
-  // Otherwise, randomly select one character per round
-  const selected: GameCharacter[] = [];
-  const usedIndices = new Set<number>();
-
-  for (let round = 1; round <= numberOfRounds; round++) {
-    // Find available indices (not already used, or reuse if we've exhausted all)
-    let attempts = 0;
-    let charIndex: number;
-
-    do {
-      if (usedIndices.size >= availableCharacters.length) {
-        // Reset if we've used all characters
-        usedIndices.clear();
-      }
-      charIndex = Math.floor(Math.random() * availableCharacters.length);
-      attempts++;
-    } while (usedIndices.has(charIndex) && attempts < 100);
-
-    usedIndices.add(charIndex);
-    const character = availableCharacters[charIndex];
-    selected.push({
-      character,
-      round,
-      category: character.category,
-    });
-  }
-
-  return selected;
-}
-
-/**
- * Transitions from setup to ready phase by generating the game characters.
- * This freezes the configuration and prepares the game for start.
- */
-export function transitionToReady(state: GameStatus): GameStatus {
-  if (state.phase !== 'setup') {
-    return state; // Can only transition from setup
-  }
-
-  // Validate that we have characters loaded
-  if (state.characters.length === 0) {
-    return state; // Cannot transition without characters
-  }
-
-  // Validate that we have selected difficulties and categories
-  if (
-    state.config.selectedDifficulties.length === 0 ||
-    state.config.selectedCategories.length === 0
-  ) {
-    return state; // Cannot transition without selections
-  }
-
-  const gameCharacters = generateGameCharacters(state);
-
-  if (gameCharacters.length === 0) {
-    return state; // Cannot transition if no characters match criteria
-  }
-
-  return {
-    ...state,
-    phase: 'ready',
-    gameCharacters,
-  };
-}
-
-/**
- * Transitions back from ready to setup phase, clearing game characters.
+ * Transitions back to prepping phase, clearing all game state.
  * This allows reconfiguration of the game.
  */
-export function transitionToSetup(state: GameStatus): GameStatus {
+export function transitionToPrepping(state: GameStatus): GameStatus {
   return {
     ...state,
-    phase: 'setup',
-    gameCharacters: [],
+    phase: 'prepping',
     usedCharacters: [],
     currentRound: 0,
     currentCategory: null,

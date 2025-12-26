@@ -14,7 +14,7 @@ function PlayerScreenContent() {
   const { value: config } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
 
   // Ensure phase is always set (fallback for migration)
-  const currentPhase = state?.phase || 'setup';
+  const currentPhase = state?.phase || 'prepping';
 
   // Show loading/empty state if no game state is available
   if (!state || !config) {
@@ -38,22 +38,17 @@ function PlayerScreenContent() {
   return (
     <div className="player-screen">
       <div className="player-main-content">
-        {currentPhase === 'setup' ? (
+        {currentPhase === 'prepping' ? (
           <div className="player-status-message">
             <h2>Game Setup</h2>
             <p>The Game Master is configuring the game. Please wait...</p>
           </div>
-        ) : currentPhase === 'ready' && !state.isGameActive ? (
+        ) : currentPhase === 'choosing' ? (
           <div className="player-status-message">
-            <h2>Ready to Play</h2>
-            <p>The game is prepared and ready to start!</p>
+            <h2>Game Master is Choosing</h2>
+            <p>The Game Master is selecting the character for this round...</p>
           </div>
-        ) : !state.isGameActive ? (
-          <div className="player-status-message">
-            <h2>Ready to Play</h2>
-            <p>Configure your game settings and start playing!</p>
-          </div>
-        ) : state.currentCharacter ? (
+        ) : currentPhase === 'guessing' && state.currentCharacter ? (
           <div className="player-character-display">
             <img
               src={state.currentCharacter.image_url}
