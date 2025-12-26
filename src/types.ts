@@ -41,6 +41,9 @@ export interface GameStatus {
   isTimerRunning: boolean;
   timeRemaining: number;
   hintsRevealed: number;
+  currentTurn: number;
+  currentTeamIndex: number | null;
+  turnType: 'team' | 'free-for-all';
 }
 
 export interface RoundResult {

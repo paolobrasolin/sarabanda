@@ -6,7 +6,13 @@ import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameStatus } from '../types';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import {
+  awardPoints,
+  completeRound,
   endGame,
+  getTurnDuration,
+  getTurnPoints,
+  handleCorrectAnswer,
+  handleIncorrectAnswer,
   markCharacterUsed,
   rerollCharacter,
   setTimeRemaining,
@@ -228,18 +234,6 @@ function RemoteScreenContent() {
     updateState(newState);
   };
 
-  const handleNextRound = () => {
-    if (currentPhase !== 'guessing') {
-      return;
-    }
-    // Mark current character as used
-    let newState = state;
-    if (state.currentCharacter) {
-      const characterId = createCharacterId(state.currentCharacter);
-      newState = markCharacterUsed(state, characterId);
-    }
-    updateState(transitionToChoosing(newState));
-  };
 
   const handleEndGame = () => {
     if (confirm('Are you sure you want to end the current game?')) {
@@ -267,11 +261,56 @@ function RemoteScreenContent() {
       // Start timer
       let newState = state;
       if (state.timeRemaining === 0) {
-        // Initialize timer to 30 seconds if at 0
-        newState = setTimeRemaining(newState, 30);
+        // Initialize timer to the appropriate duration for current turn
+        const duration = getTurnDuration(state);
+        newState = setTimeRemaining(newState, duration);
       }
       updateState(setTimerRunning(newState, true));
     }
+  };
+
+  const onCorrectAnswer = () => {
+    if (state.phase !== 'guessing') {
+      return;
+    }
+    // Stop timer if running
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    updateState(handleCorrectAnswer(state));
+  };
+
+  const onIncorrectAnswer = () => {
+    if (state.phase !== 'guessing') {
+      return;
+    }
+    // Stop timer if running
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    updateState(handleIncorrectAnswer(state));
+  };
+
+  const handleAwardFreeForAll = (teamIndex: number | null) => {
+    if (state.phase !== 'guessing' || state.turnType !== 'free-for-all') {
+      return;
+    }
+    // Stop timer if running
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    const points = getTurnPoints(state);
+    let newState = awardPoints(state, teamIndex, points);
+    // Mark character as used
+    if (state.currentCharacter) {
+      const characterId = createCharacterId(state.currentCharacter);
+      newState = markCharacterUsed(newState, characterId);
+    }
+    // Complete round and move to next
+    updateState(completeRound(newState));
   };
 
   return (
@@ -315,32 +354,14 @@ function RemoteScreenContent() {
             </>
           ) : currentPhase === 'guessing' ? (
             <>
-              <Button
-                onClick={handleNextRound}
-                className="control-btn control-btn-primary"
-              >
-                Next Round
-              </Button>
               <Button onClick={handleEndGame} className="control-btn control-btn-danger">
                 End Game
-              </Button>
-              <Button
-                onClick={handleStartStopTimer}
-                className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
-              >
-                {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
               </Button>
             </>
           ) : (
             <>
               <Button onClick={handleEndGame} className="control-btn control-btn-danger">
                 End Game
-              </Button>
-              <Button
-                onClick={handleStartStopTimer}
-                className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
-              >
-                {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
               </Button>
             </>
           )}
@@ -401,6 +422,99 @@ function RemoteScreenContent() {
         </div>
       </section>
 
+      <section className="remote-turn-manager">
+        <h2>Turn Manager</h2>
+        {currentPhase === 'guessing' ? (
+          state.turnType === 'free-for-all' ? (
+            <div className="turn-info">
+              <strong>Free-for-All</strong>
+              <div className="turn-actions">
+                {config.teamNames.map((team, index) => (
+                  <Button
+                    key={team}
+                    onClick={() => handleAwardFreeForAll(index)}
+                    className="control-btn control-btn-primary"
+                  >
+                    Award to {team}
+                  </Button>
+                ))}
+                <Button
+                  onClick={() => handleAwardFreeForAll(null)}
+                  className="control-btn"
+                >
+                  No Points
+                </Button>
+              </div>
+              <div className="turn-timer-control">
+                <Button
+                  onClick={handleStartStopTimer}
+                  className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
+                >
+                  {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="turn-info">
+              <strong>
+                {state.currentTeamIndex !== null
+                  ? `${config.teamNames[state.currentTeamIndex]}'s Turn`
+                  : 'No Turn Active'}
+              </strong>
+              <div className="turn-actions">
+                <Button
+                  onClick={onCorrectAnswer}
+                  className="control-btn control-btn-primary"
+                >
+                  Correct Answer
+                </Button>
+                <Button
+                  onClick={onIncorrectAnswer}
+                  className="control-btn"
+                >
+                  Incorrect/Timeout
+                </Button>
+              </div>
+              <div className="turn-timer-control">
+                <Button
+                  onClick={handleStartStopTimer}
+                  className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
+                >
+                  {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
+                </Button>
+              </div>
+            </div>
+          )
+        ) : (
+          <div className="turn-info">
+            <strong>No Turn Active</strong>
+            <div className="turn-actions">
+              <Button
+                disabled
+                className="control-btn control-btn-primary"
+              >
+                Correct Answer
+              </Button>
+              <Button
+                disabled
+                className="control-btn"
+              >
+                Incorrect/Timeout
+              </Button>
+            </div>
+            <div className="turn-timer-control">
+              <Button
+                onClick={handleStartStopTimer}
+                disabled
+                className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
+              >
+                {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="remote-status">
         <h2>Game Status</h2>
         <dl className="status-list">
@@ -412,6 +526,18 @@ function RemoteScreenContent() {
             <>
               <dt>Current round:</dt>
               <dd>{state.currentRound}</dd>
+              {currentPhase === 'guessing' && (
+                <>
+                  <dt>Current turn:</dt>
+                  <dd>
+                    {state.turnType === 'free-for-all'
+                      ? 'Free-for-All'
+                      : state.currentTeamIndex !== null
+                        ? `Turn ${state.currentTurn} - ${config.teamNames[state.currentTeamIndex]}`
+                        : 'No turn active'}
+                  </dd>
+                </>
+              )}
             </>
           )}
           <dt>Used characters:</dt>

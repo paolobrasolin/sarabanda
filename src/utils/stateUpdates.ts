@@ -90,17 +90,20 @@ export function transitionToChoosing(state: GameStatus): GameStatus {
 
 /**
  * Transitions from choosing to guessing phase, confirming the current character.
- * This makes the character visible to players.
+ * This makes the character visible to players and initializes the first turn.
  */
 export function transitionToGuessing(state: GameStatus): GameStatus {
   if (state.phase !== 'choosing' || !state.currentCharacter) {
     return state;
   }
 
-  return {
+  const newState = {
     ...state,
     phase: 'guessing',
   };
+
+  // Initialize first turn
+  return initializeFirstTurn(newState);
 }
 
 /**
@@ -144,6 +147,9 @@ export function endGame(state: GameStatus): GameStatus {
     isTimerRunning: false,
     currentCharacter: null,
     currentCategory: null,
+    currentTurn: 0,
+    currentTeamIndex: null,
+    turnType: 'team',
   };
 }
 
@@ -212,5 +218,179 @@ export function transitionToPrepping(state: GameStatus): GameStatus {
     isTimerRunning: false,
     timeRemaining: 0,
     hintsRevealed: 0,
+    currentTurn: 0,
+    currentTeamIndex: null,
+    turnType: 'team',
   };
+}
+
+/**
+ * Starts a turn for a specific team or free-for-all.
+ */
+export function startTurn(
+  state: GameStatus,
+  turnNumber: number,
+  teamIndex: number | null,
+  turnType: 'team' | 'free-for-all',
+): GameStatus {
+  return {
+    ...state,
+    currentTurn: turnNumber,
+    currentTeamIndex: teamIndex,
+    turnType,
+    isTimerRunning: false,
+    timeRemaining: 0,
+  };
+}
+
+/**
+ * Gets the timer duration for the current turn based on turn type and team.
+ */
+export function getTurnDuration(state: GameStatus): number {
+  if (state.turnType === 'free-for-all') {
+    return state.config.freeTurnDuration;
+  }
+  if (state.currentTeamIndex !== null && state.currentTeamIndex < state.config.nthTurnDurations.length) {
+    return state.config.nthTurnDurations[state.currentTeamIndex];
+  }
+  return 60; // Default fallback
+}
+
+/**
+ * Gets the points to award for the current turn.
+ */
+export function getTurnPoints(state: GameStatus): number {
+  if (state.turnType === 'free-for-all') {
+    return state.config.freeTurnScore;
+  }
+  if (state.currentTeamIndex !== null && state.currentTeamIndex < state.config.nthTurnScores.length) {
+    return state.config.nthTurnScores[state.currentTeamIndex];
+  }
+  return 0; // Default fallback
+}
+
+/**
+ * Moves to the next team's turn.
+ * Returns null if all teams have had a turn (should start free-for-all).
+ */
+export function nextTeamTurn(state: GameStatus): GameStatus | null {
+  const teamCount = state.config.teamNames.length;
+  const currentTeamIndex = state.currentTeamIndex;
+
+  if (currentTeamIndex === null) {
+    // Already in free-for-all or no turn started
+    return null;
+  }
+
+  const nextTurnNumber = state.currentTurn + 1;
+
+  // If we've given all teams a turn, start free-for-all
+  if (nextTurnNumber > teamCount) {
+    return null; // All teams have had a turn
+  }
+
+  // Calculate the next team index based on round and turn number
+  // Round 1 starts with team 0, round 2 with team 1, etc.
+  const startingTeamIndex = (state.currentRound - 1) % teamCount;
+  // Turn 1 = startingTeamIndex, Turn 2 = startingTeamIndex + 1, etc.
+  const nextTeamIndex = (startingTeamIndex + nextTurnNumber - 1) % teamCount;
+
+  return startTurn(state, nextTurnNumber, nextTeamIndex, 'team');
+}
+
+/**
+ * Starts the free-for-all phase.
+ */
+export function startFreeForAll(state: GameStatus): GameStatus {
+  return startTurn(state, state.currentTurn + 1, null, 'free-for-all');
+}
+
+/**
+ * Awards points to a team (or no points if teamIndex is null).
+ * Used for free-for-all or when a team gets it correct.
+ */
+export function awardPoints(state: GameStatus, teamIndex: number | null, points: number): GameStatus {
+  if (teamIndex === null) {
+    return state; // No points awarded
+  }
+
+  const teamName = state.config.teamNames[teamIndex];
+  if (!teamName) {
+    return state; // Invalid team index
+  }
+
+  const currentScore = state.scores[teamName] || 0;
+  return {
+    ...state,
+    scores: {
+      ...state.scores,
+      [teamName]: currentScore + points,
+    },
+  };
+}
+
+/**
+ * Handles a correct answer - awards points and ends the round.
+ */
+export function handleCorrectAnswer(state: GameStatus): GameStatus {
+  if (!state.currentCharacter) {
+    return state;
+  }
+
+  const points = getTurnPoints(state);
+  let newState = awardPoints(state, state.currentTeamIndex, points);
+
+  // Mark character as used
+  const characterId = createCharacterId(state.currentCharacter);
+  newState = markCharacterUsed(newState, characterId);
+
+  // End round and move to next
+  return completeRound(newState);
+}
+
+/**
+ * Handles an incorrect answer or timeout - moves to next turn or free-for-all.
+ */
+export function handleIncorrectAnswer(state: GameStatus): GameStatus {
+  const nextState = nextTeamTurn(state);
+
+  if (nextState === null) {
+    // All teams have had a turn, start free-for-all
+    return startFreeForAll(state);
+  }
+
+  return nextState;
+}
+
+/**
+ * Completes the current round and moves to the next round's choosing phase.
+ */
+export function completeRound(state: GameStatus): GameStatus {
+  // Stop timer
+  let newState: GameStatus = {
+    ...state,
+    isTimerRunning: false,
+    timeRemaining: 0,
+    currentTurn: 0,
+    currentTeamIndex: null,
+    turnType: 'team',
+    hintsRevealed: 0,
+  };
+
+  // Move to next round's choosing phase
+  return transitionToChoosing(newState);
+}
+
+/**
+ * Initializes the first turn when transitioning to guessing phase.
+ */
+export function initializeFirstTurn(state: GameStatus): GameStatus {
+  if (state.phase !== 'guessing' || !state.currentCharacter) {
+    return state;
+  }
+
+  const teamCount = state.config.teamNames.length;
+  const startingTeamIndex = (state.currentRound - 1) % teamCount;
+
+  return startTurn(state, 1, startingTeamIndex, 'team');
 }

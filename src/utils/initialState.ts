@@ -26,4 +26,7 @@ export const initialGameStatus: GameStatus = {
   isTimerRunning: false,
   timeRemaining: 0,
   hintsRevealed: 0,
+  currentTurn: 0,
+  currentTeamIndex: null,
+  turnType: 'team',
 };
