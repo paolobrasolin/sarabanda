@@ -1,6 +1,7 @@
 import { Button } from '@ariakit/react';
 import { useEffect, useRef, useState } from 'react';
 import { ConfigModal } from './ConfigDialog';
+import { PeopleDialog } from './PeopleDialog';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameStatus } from '../types';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
@@ -28,6 +29,7 @@ function RemoteScreenContent() {
   const timeRemainingRef = useRef(state?.timeRemaining ?? 0);
   const stateRef = useRef(state);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isPeopleDialogOpen, setIsPeopleDialogOpen] = useState(false);
 
   // Migrate old state format: ensure phase and gameCharacters exist
   useEffect(() => {
@@ -54,10 +56,21 @@ function RemoteScreenContent() {
     }
   }, [state, config, updateState]);
 
-  // Sync characters from PEOPLE storage to STATUS if STATUS doesn't have them
+  // Sync characters from PEOPLE storage to STATUS
+  // Always keep STATUS.characters in sync with PEOPLE storage
   useEffect(() => {
-    if (state && savedPeople && savedPeople.length > 0 && state.characters.length === 0) {
-      updateState(updateCharacters(state, savedPeople));
+    if (state && savedPeople) {
+      // Check if characters need to be synced
+      const stateCharsString = JSON.stringify(state.characters || []);
+      const savedPeopleString = JSON.stringify(savedPeople);
+
+      // Sync if PEOPLE has characters and they differ from STATUS
+      if (savedPeople.length > 0 && stateCharsString !== savedPeopleString) {
+        updateState(updateCharacters(state, savedPeople));
+      } else if (savedPeople.length === 0 && state.characters.length > 0) {
+        // Also sync if PEOPLE is empty but STATUS has characters (clear STATUS)
+        updateState(updateCharacters(state, []));
+      }
     }
   }, [state, savedPeople, updateState]);
 
@@ -140,8 +153,30 @@ function RemoteScreenContent() {
       alert('Please select at least one difficulty and one category in the configuration.');
       return;
     }
+
     // Merge config into state for the transition function
     const stateWithConfig = { ...state, config };
+
+    // Debug: Check if any characters match the selected criteria
+    const availableCharacters = stateWithConfig.characters.filter(
+      (char) =>
+        config.selectedDifficulties.includes(char.difficulty) && config.selectedCategories.includes(char.category),
+    );
+
+    if (availableCharacters.length === 0) {
+      const availableDifficulties = [...new Set(state.characters.map((c) => c.difficulty))];
+      const availableCategories = [...new Set(state.characters.map((c) => c.category))];
+      alert(
+        `No characters match the selected criteria.\n\n` +
+        `Selected difficulties: ${config.selectedDifficulties.join(', ') || 'None'}\n` +
+        `Selected categories: ${config.selectedCategories.join(', ') || 'None'}\n\n` +
+        `Available difficulties: ${availableDifficulties.join(', ')}\n` +
+        `Available categories: ${availableCategories.join(', ')}\n\n` +
+        `Please adjust your selection in the Config screen.`,
+      );
+      return;
+    }
+
     const newState = transitionToReady(stateWithConfig);
     if (newState.phase === 'setup') {
       alert('Failed to generate game characters. Please check your configuration and try again.');
@@ -202,6 +237,14 @@ function RemoteScreenContent() {
     <div className="remote-screen">
       <section className="remote-controls">
         <div className="control-buttons">
+          <button
+            className="config-btn"
+            onClick={() => setIsPeopleDialogOpen(true)}
+            aria-label="Load characters"
+            title="Load characters from Google Sheet"
+          >
+            People
+          </button>
           <button
             className="config-btn"
             onClick={() => {
@@ -335,7 +378,7 @@ function RemoteScreenContent() {
       {currentPhase === 'setup' && state.characters.length === 0 && (
         <section className="remote-warning">
           <p>
-            <strong>No characters loaded.</strong> Please go to the Config screen to load characters from a Google
+            <strong>No characters loaded.</strong> Please click "Load Characters" to load characters from a Google
             Sheet.
           </p>
         </section>
@@ -360,15 +403,14 @@ function RemoteScreenContent() {
         <p>Full game controls (timer, hints, scoring, etc.) will be implemented in Phase 4.</p>
       </section>
 
-      {isConfigModalOpen && (
-        <ConfigModal 
-          open={isConfigModalOpen} 
-          onClose={() => {
-            console.log('Config modal closing');
-            setIsConfigModalOpen(false);
-          }} 
-        />
-      )}
+      <ConfigModal
+        open={isConfigModalOpen}
+        onClose={() => {
+          console.log('Config modal closing');
+          setIsConfigModalOpen(false);
+        }}
+      />
+      <PeopleDialog open={isPeopleDialogOpen} onClose={() => setIsPeopleDialogOpen(false)} />
     </div>
   );
 }

@@ -20,36 +20,27 @@ import {
 import React, { useEffect, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameStatus } from '../types';
-import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 function ConfigDialogContent() {
   const { value: gameStatus } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
   const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
-  const { update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
+  const { value: loadedCharacters } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
   
   const isConfigLocked = gameStatus?.phase === 'ready';
 
-  const [isLoading, setIsLoading] = useState(false);
+  // Compute available categories and difficulties from loaded characters
+  const availableCategories = React.useMemo(() => {
+    const chars = loadedCharacters || gameStatus?.characters || [];
+    return [...new Set(chars.map((c) => c.category))].sort();
+  }, [loadedCharacters, gameStatus?.characters]);
 
-  const [validationStatus, setValidationStatus] = useState<{
-    isValid: boolean;
-    characterCount: number;
-    categories: string[];
-    difficulties: string[];
-  } | null>(null);
+  const availableDifficulties = React.useMemo(() => {
+    const chars = loadedCharacters || gameStatus?.characters || [];
+    return [...new Set(chars.map((c) => c.difficulty))].sort();
+  }, [loadedCharacters, gameStatus?.characters]);
 
-  // Initialize from localStorage directly, not from storage context
-  // This prevents circular updates
-  const [loadedCharacters, setLoadedCharacters] = useState<Character[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PEOPLE);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
   const [config, setConfig] = useState<GameConfig>(() => {
     // Try to load from localStorage directly first, then fallback
     try {
@@ -157,104 +148,6 @@ function ConfigDialogContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, updateConfigStorage, isConfigLocked]);
 
-  // Persist loadedCharacters to localStorage on every change
-  const lastSavedPeopleRef = React.useRef<string | null>(null);
-  useEffect(() => {
-    if (loadedCharacters.length > 0) {
-      const peopleString = JSON.stringify(loadedCharacters);
-      // Only update if characters actually changed
-      if (lastSavedPeopleRef.current !== peopleString) {
-        lastSavedPeopleRef.current = peopleString;
-        updatePeopleStorage(loadedCharacters);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadedCharacters, updatePeopleStorage]);
-
-  // Restore validation status if characters are already loaded
-  useEffect(() => {
-    if (loadedCharacters.length > 0) {
-      const characters = loadedCharacters;
-      const categories = [...new Set(characters.map((c) => c.category))].sort();
-      const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
-
-      setValidationStatus({
-        isValid: true,
-        characterCount: characters.length,
-        categories,
-        difficulties,
-      });
-    } else if (gameStatus?.characters && gameStatus.characters.length > 0) {
-      // Fallback to gameStatus.characters if loadedCharacters is empty
-      const characters = gameStatus.characters;
-      setLoadedCharacters(characters);
-      const categories = [...new Set(characters.map((c) => c.category))].sort();
-      const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
-
-      setValidationStatus({
-        isValid: true,
-        characterCount: characters.length,
-        categories,
-        difficulties,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameStatus.characters, loadedCharacters]); // Only run on mount
-
-  const handleUrlChange = (url: string) => {
-    setConfig((prev) => ({ ...prev, googleSheetUrl: url }));
-    // Clear validation status and saved characters when URL changes
-    if (!url) {
-      setValidationStatus(null);
-      setLoadedCharacters([]);
-      // Clear saved characters from localStorage
-      updatePeopleStorage([]);
-    }
-  };
-
-  const handleLoadSheet = async () => {
-    const url = config.googleSheetUrl;
-    if (!url || !url.includes('docs.google.com/spreadsheets')) {
-      alert('Invalid URL\n\nPlease enter a valid Google Sheets URL.');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await fetchCharactersFromGoogleSheet(url);
-
-      if (result.success && result.data) {
-        const characters = result.data;
-        setLoadedCharacters(characters);
-        const categories = [...new Set(characters.map((c) => c.category))].sort();
-        const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
-
-        setValidationStatus({
-          isValid: true,
-          characterCount: characters.length,
-          categories,
-          difficulties,
-        });
-
-        // Set defaults to all selected
-        setConfig((prev) => ({
-          ...prev,
-          selectedCategories: categories,
-          selectedDifficulties: difficulties,
-        }));
-
-        alert(
-          `Data Loaded Successfully\n\nLoaded ${characters.length} characters with ${categories.length} categories and ${difficulties.length} difficulty levels.`,
-        );
-      } else {
-        alert(`Failed to Load Data\n\n${result.error || 'Failed to load data from the Google Sheet.'}`);
-      }
-    } catch (err) {
-      alert(`Error\n\n${err instanceof Error ? err.message : 'An unknown error occurred.'}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="configuration-screen">
@@ -268,24 +161,6 @@ function ConfigDialogContent() {
       <section className="config-section">
         <FormProvider>
           <Form>
-            <FormGroup>
-              <FormLabel name="sheet-url">Google Sheet URL</FormLabel>
-              <div className="url-input-group">
-                <FormInput
-                  name="sheet-url"
-                  type="url"
-                  value={config.googleSheetUrl}
-                  onChange={(e) => handleUrlChange(e.target.value)}
-                  placeholder="https://docs.google.com/spreadsheets/d/..."
-                  disabled={isLoading || isConfigLocked}
-                />
-                <Button className="reload-btn" onClick={handleLoadSheet} disabled={isLoading || !config.googleSheetUrl || isConfigLocked}>
-                  {isLoading ? 'Loading...' : 'Load'}
-                </Button>
-              </div>
-            </FormGroup>
-
-            <hr />
 
             <div className="game-settings-row">
               <FormGroup>
@@ -324,12 +199,12 @@ function ConfigDialogContent() {
                     <SelectArrow />
                   </Select>
                   <SelectPopover gutter={4} sameWidth className="select-popover">
-                    {validationStatus?.difficulties?.map((difficulty) => (
+                    {availableDifficulties.map((difficulty) => (
                       <SelectItem key={difficulty} value={difficulty} className="select-item">
                         <SelectItemCheck />
                         {difficulty}
                       </SelectItem>
-                    )) || []}
+                    ))}
                   </SelectPopover>
                 </SelectProvider>
               </FormGroup>
@@ -355,12 +230,12 @@ function ConfigDialogContent() {
                     <SelectArrow />
                   </Select>
                   <SelectPopover gutter={4} sameWidth className="select-popover">
-                    {validationStatus?.categories?.map((category) => (
+                    {availableCategories.map((category) => (
                       <SelectItem key={category} value={category} className="select-item">
                         <SelectItemCheck />
                         {category}
                       </SelectItem>
-                    )) || []}
+                    ))}
                   </SelectPopover>
                 </SelectProvider>
               </FormGroup>

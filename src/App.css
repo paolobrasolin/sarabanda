@@ -1049,6 +1049,127 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* People Modal Styles */
+.people-modal-dialog {
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  max-width: 95vw;
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+}
+
+/* Backdrop for modal - Ariakit uses native dialog backdrop */
+.people-modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.people-modal-heading {
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  padding: 1.5rem 2rem;
+  border-bottom: 2px solid var(--bg-secondary);
+}
+
+.people-modal-content {
+  padding: 2rem;
+  max-width: 100%;
+}
+
+.people-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.5rem 2rem;
+  border-top: 2px solid var(--bg-secondary);
+  gap: 1rem;
+}
+
+.people-modal-close-btn {
+  background-color: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-family: inherit;
+}
+
+.people-modal-close-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+/* Loaded Data Table */
+.loaded-data-section {
+  margin-top: 2rem;
+}
+
+.loaded-data-section h3 {
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.people-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
+.people-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.people-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-primary);
+  z-index: 1;
+}
+
+.people-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border);
+  background: var(--bg-primary);
+}
+
+.people-table td {
+  padding: 0.5rem 1rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.people-table tbody tr:hover {
+  background: var(--bg-accent);
+}
+
+.people-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
 
