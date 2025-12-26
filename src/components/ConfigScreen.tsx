@@ -270,10 +270,10 @@ function ConfigScreenContent() {
         <FormProvider>
           <Form>
             <FormGroup>
-              <FormLabel htmlFor="sheet-url">Google Sheet URL</FormLabel>
+              <FormLabel name="sheet-url">Google Sheet URL</FormLabel>
               <div className="url-input-group">
                 <FormInput
-                  id="sheet-url"
+                  name="sheet-url"
                   type="url"
                   value={config.googleSheetUrl}
                   onChange={(e) => handleUrlChange(e.target.value)}
@@ -295,9 +295,9 @@ function ConfigScreenContent() {
 
             <div className="game-settings-row">
               <FormGroup>
-                <FormLabel htmlFor="number-of-rounds">Number of Rounds</FormLabel>
+                <FormLabel name="number-of-rounds">Number of Rounds</FormLabel>
                 <FormInput
-                  id="number-of-rounds"
+                  name="number-of-rounds"
                   type="number"
                   min="1"
                   value={numberOfRounds.toString()}
@@ -374,9 +374,9 @@ function ConfigScreenContent() {
             <div className="three-column-layout">
               <div className="config-column">
                 <FormGroup>
-                  <FormLabel htmlFor="number-of-teams">Number of Teams</FormLabel>
+                  <FormLabel name="number-of-teams">Number of Teams</FormLabel>
                   <FormInput
-                    id="number-of-teams"
+                    name="number-of-teams"
                     type="number"
                     min="2"
                     value={numberOfTeams.toString()}
@@ -389,9 +389,9 @@ function ConfigScreenContent() {
 
                 {(config.teamNames || []).map((team, index) => (
                   <FormGroup key={index}>
-                    <FormLabel htmlFor={`team-${index}`}>Team {index + 1}</FormLabel>
+                    <FormLabel name={`team-${index}`}>Team {index + 1}</FormLabel>
                     <FormInput
-                      id={`team-${index}`}
+                      name={`team-${index}`}
                       type="text"
                       value={team}
                       onChange={(e) => {
@@ -406,9 +406,9 @@ function ConfigScreenContent() {
 
               <div className="config-column">
                 <FormGroup>
-                  <FormLabel htmlFor="free-turn-duration">Free Turn Duration</FormLabel>
+                  <FormLabel name="free-turn-duration">Free Turn Duration</FormLabel>
                   <FormInput
-                    id="free-turn-duration"
+                    name="free-turn-duration"
                     type="number"
                     min="10"
                     max="300"
@@ -424,9 +424,9 @@ function ConfigScreenContent() {
 
                 {(config.nthTurnDurations || []).map((duration, index) => (
                   <FormGroup key={index}>
-                    <FormLabel htmlFor={`turn-duration-${index}`}>Turn {index + 1} Duration</FormLabel>
+                    <FormLabel name={`turn-duration-${index}`}>Turn {index + 1} Duration</FormLabel>
                     <FormInput
-                      id={`turn-duration-${index}`}
+                      name={`turn-duration-${index}`}
                       type="number"
                       min="10"
                       max="300"
@@ -443,9 +443,9 @@ function ConfigScreenContent() {
 
               <div className="config-column">
                 <FormGroup>
-                  <FormLabel htmlFor="free-turn-score">Free Turn Score</FormLabel>
+                  <FormLabel name="free-turn-score">Free Turn Score</FormLabel>
                   <FormInput
-                    id="free-turn-score"
+                    name="free-turn-score"
                     type="number"
                     step="0.5"
                     min="0"
@@ -461,9 +461,9 @@ function ConfigScreenContent() {
 
                 {(config.nthTurnScores || []).map((score, index) => (
                   <FormGroup key={index}>
-                    <FormLabel htmlFor={`turn-score-${index}`}>Turn {index + 1} Score</FormLabel>
+                    <FormLabel name={`turn-score-${index}`}>Turn {index + 1} Score</FormLabel>
                     <FormInput
-                      id={`turn-score-${index}`}
+                      name={`turn-score-${index}`}
                       type="number"
                       step="0.5"
                       min="0"
