@@ -33,7 +33,9 @@ export class ErrorBoundary extends Component<Props, State> {
             <summary>Error Details</summary>
             <pre>{this.state.error?.stack}</pre>
           </details>
-          <button onClick={() => this.setState({ hasError: false })}>Try Again</button>
+          <button type="button" onClick={() => this.setState({ hasError: false })}>
+            Try Again
+          </button>
         </div>
       );
     }

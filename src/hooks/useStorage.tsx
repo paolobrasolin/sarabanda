@@ -34,13 +34,17 @@ interface StorageContextValue<T> {
 }
 
 // Create a context factory that stores contexts by storage key
-const contexts = new Map<string, React.Context<StorageContextValue<any> | undefined>>();
+const contexts = new Map<string, React.Context<StorageContextValue<unknown> | undefined>>();
 
 function getContext<T>(storageKey: string): React.Context<StorageContextValue<T> | undefined> {
   if (!contexts.has(storageKey)) {
     contexts.set(storageKey, createContext<StorageContextValue<T> | undefined>(undefined));
   }
-  return contexts.get(storageKey)!;
+  const context = contexts.get(storageKey);
+  if (!context) {
+    throw new Error(`Failed to get context for storage key: ${storageKey}`);
+  }
+  return context as React.Context<StorageContextValue<T> | undefined>;
 }
 
 export function StorageProvider<T>({

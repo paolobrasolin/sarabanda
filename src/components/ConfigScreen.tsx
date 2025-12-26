@@ -21,9 +21,9 @@ import { initialGameConfig, initialGameState } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 function ConfigScreenContent() {
-  const { value: gameState, update: updateStateStorage } = useStorage<GameState>(STORAGE_KEYS.STATUS);
-  const { value: savedConfig, update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
-  const { value: savedPeople, update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
+  const { value: gameState } = useStorage<GameState>(STORAGE_KEYS.STATUS);
+  const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
+  const { update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -365,7 +365,7 @@ function ConfigScreenContent() {
                 </FormGroup>
 
                 {(config.teamNames || []).map((team, index) => (
-                  <FormGroup key={index}>
+                  <FormGroup key={`team-${team}`}>
                     <FormLabel name={`team-${index}`}>Team {index + 1}</FormLabel>
                     <FormInput
                       name={`team-${index}`}
@@ -399,23 +399,26 @@ function ConfigScreenContent() {
                   />
                 </FormGroup>
 
-                {(config.nthTurnDurations || []).map((duration, index) => (
-                  <FormGroup key={index}>
-                    <FormLabel name={`turn-duration-${index}`}>Turn {index + 1} Duration</FormLabel>
-                    <FormInput
-                      name={`turn-duration-${index}`}
-                      type="number"
-                      min="10"
-                      max="300"
-                      value={duration.toString()}
-                      onChange={(e) => {
-                        const newDurations = [...(config.nthTurnDurations || [])];
-                        newDurations[index] = parseInt(e.target.value) || 60;
-                        setConfig((prev) => ({ ...prev, nthTurnDurations: newDurations }));
-                      }}
-                    />
-                  </FormGroup>
-                ))}
+                {(config.nthTurnDurations || []).map((duration, index) => {
+                  const teamName = (config.teamNames || [])[index] || `team-${index}`;
+                  return (
+                    <FormGroup key={`duration-${teamName}`}>
+                      <FormLabel name={`turn-duration-${index}`}>Turn {index + 1} Duration</FormLabel>
+                      <FormInput
+                        name={`turn-duration-${index}`}
+                        type="number"
+                        min="10"
+                        max="300"
+                        value={duration.toString()}
+                        onChange={(e) => {
+                          const newDurations = [...(config.nthTurnDurations || [])];
+                          newDurations[index] = parseInt(e.target.value) || 60;
+                          setConfig((prev) => ({ ...prev, nthTurnDurations: newDurations }));
+                        }}
+                      />
+                    </FormGroup>
+                  );
+                })}
               </div>
 
               <div className="config-column">
@@ -436,26 +439,29 @@ function ConfigScreenContent() {
                   />
                 </FormGroup>
 
-                {(config.nthTurnScores || []).map((score, index) => (
-                  <FormGroup key={index}>
-                    <FormLabel name={`turn-score-${index}`}>Turn {index + 1} Score</FormLabel>
-                    <FormInput
-                      name={`turn-score-${index}`}
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={score.toString()}
-                      onChange={(e) => {
-                        const newTurnScores = [...(config.nthTurnScores || [])];
-                        newTurnScores[index] = parseFloat(e.target.value) || 0;
-                        setConfig((prev) => ({
-                          ...prev,
-                          nthTurnScores: newTurnScores,
-                        }));
-                      }}
-                    />
-                  </FormGroup>
-                ))}
+                {(config.nthTurnScores || []).map((score, index) => {
+                  const teamName = (config.teamNames || [])[index] || `team-${index}`;
+                  return (
+                    <FormGroup key={`score-${teamName}`}>
+                      <FormLabel name={`turn-score-${index}`}>Turn {index + 1} Score</FormLabel>
+                      <FormInput
+                        name={`turn-score-${index}`}
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        value={score.toString()}
+                        onChange={(e) => {
+                          const newTurnScores = [...(config.nthTurnScores || [])];
+                          newTurnScores[index] = parseFloat(e.target.value) || 0;
+                          setConfig((prev) => ({
+                            ...prev,
+                            nthTurnScores: newTurnScores,
+                          }));
+                        }}
+                      />
+                    </FormGroup>
+                  );
+                })}
               </div>
             </div>
           </Form>

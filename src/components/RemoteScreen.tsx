@@ -25,6 +25,57 @@ function RemoteScreenContent() {
     }
   }, [state, savedPeople, updateState]);
 
+  // Keep refs in sync with state
+  useEffect(() => {
+    if (state) {
+      timeRemainingRef.current = state.timeRemaining;
+      stateRef.current = state;
+    }
+  }, [state]);
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!state) return;
+
+    if (state.isTimerRunning && state.timeRemaining > 0) {
+      // Clear any existing interval first
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+
+      timerIntervalRef.current = window.setInterval(() => {
+        const currentState = stateRef.current;
+        if (!currentState) return;
+
+        const newTime = timeRemainingRef.current - 1;
+        if (newTime <= 0) {
+          // Timer reached 0, stop it
+          let newState = setTimerRunning(currentState, false);
+          newState = setTimeRemaining(newState, 0);
+          updateState(newState);
+        } else {
+          updateState(setTimeRemaining(currentState, newTime));
+        }
+      }, 1000);
+    } else {
+      // Stop timer if not running or time is 0
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      if (state.timeRemaining === 0 && state.isTimerRunning) {
+        updateState(setTimerRunning(state, false));
+      }
+    }
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [state, updateState]);
+
   // Handle null state
   if (!state) {
     return (
@@ -77,57 +128,6 @@ function RemoteScreenContent() {
       updateState(setTimerRunning(newState, true));
     }
   };
-
-  // Keep refs in sync with state
-  useEffect(() => {
-    if (state) {
-      timeRemainingRef.current = state.timeRemaining;
-      stateRef.current = state;
-    }
-  }, [state]);
-
-  // Timer countdown effect
-  useEffect(() => {
-    if (!state) return;
-
-    if (state.isTimerRunning && state.timeRemaining > 0) {
-      // Clear any existing interval first
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
-
-      timerIntervalRef.current = window.setInterval(() => {
-        const currentState = stateRef.current;
-        if (!currentState) return;
-
-        const newTime = timeRemainingRef.current - 1;
-        if (newTime <= 0) {
-          // Timer reached 0, stop it
-          let newState = setTimerRunning(currentState, false);
-          newState = setTimeRemaining(newState, 0);
-          updateState(newState);
-        } else {
-          updateState(setTimeRemaining(currentState, newTime));
-        }
-      }, 1000);
-    } else {
-      // Stop timer if not running or time is 0
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
-      if (state.timeRemaining === 0 && state.isTimerRunning) {
-        updateState(setTimerRunning(state, false));
-      }
-    }
-
-    return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
-    };
-  }, [state, updateState]);
 
   return (
     <div className="remote-screen">
