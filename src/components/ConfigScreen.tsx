@@ -15,13 +15,13 @@ import {
 } from '@ariakit/react';
 import React, { useEffect, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
-import type { Character, GameConfig, GameState } from '../types';
+import type { Character, GameConfig, GameStatus } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
-import { initialGameConfig, initialGameState } from '../utils/initialState';
+import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 function ConfigScreenContent() {
-  const { value: gameState } = useStorage<GameState>(STORAGE_KEYS.STATUS);
+  const { value: gameStatus } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
   const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
 
@@ -68,7 +68,7 @@ function ConfigScreenContent() {
     } catch {
       // Fall through to default
     }
-    const initialConfig = gameState?.config || initialGameConfig;
+    const initialConfig = gameStatus?.config || initialGameConfig;
     const teamCount = initialConfig.teamNames?.length || 2;
     const nthTurnDurations = Array.isArray(initialConfig.nthTurnDurations) ? initialConfig.nthTurnDurations : [];
     const nthTurnScores = Array.isArray(initialConfig.nthTurnScores) ? initialConfig.nthTurnScores : [];
@@ -174,9 +174,9 @@ function ConfigScreenContent() {
         categories,
         difficulties,
       });
-    } else if (gameState?.characters && gameState.characters.length > 0) {
-      // Fallback to gameState.characters if loadedCharacters is empty
-      const characters = gameState.characters;
+    } else if (gameStatus?.characters && gameStatus.characters.length > 0) {
+      // Fallback to gameStatus.characters if loadedCharacters is empty
+      const characters = gameStatus.characters;
       setLoadedCharacters(characters);
       const categories = [...new Set(characters.map((c) => c.category))].sort();
       const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
@@ -189,7 +189,7 @@ function ConfigScreenContent() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState.characters, loadedCharacters]); // Only run on mount
+  }, [gameStatus.characters, loadedCharacters]); // Only run on mount
 
   const handleUrlChange = (url: string) => {
     setConfig((prev) => ({ ...prev, googleSheetUrl: url }));
@@ -475,7 +475,7 @@ export function ConfigScreen() {
   return (
     <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={false} defaultValue={initialGameConfig}>
       <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={false} defaultValue={null}>
-        <StorageProvider<GameState> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameState}>
+        <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameStatus}>
           <ConfigScreenContent />
         </StorageProvider>
       </StorageProvider>

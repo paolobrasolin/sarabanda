@@ -7,10 +7,10 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useS
  *
  * Usage:
  * ```tsx
- * <StorageProvider<GameState>
+ * <StorageProvider<GameStatus>
  *   storageKey="sarabanda_status"
  *   readOnly={false}
- *   defaultValue={initialGameState}
+ *   defaultValue={initialGameStatus}
  * >
  *   <YourComponent />
  * </StorageProvider>
@@ -192,7 +192,7 @@ export function StorageProvider<T>({
  *
  * Usage:
  * ```tsx
- * const { value, update, clear } = useStorage<GameState>("sarabanda_status");
+ * const { value, update, clear } = useStorage<GameStatus>("sarabanda_status");
  * ```
  */
 export function useStorage<T>(storageKey: string): StorageContextValue<T> {

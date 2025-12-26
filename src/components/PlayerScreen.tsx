@@ -1,6 +1,6 @@
 import { StorageProvider, useStorage } from '../hooks/useStorage';
-import type { Character, GameState } from '../types';
-import { initialGameState } from '../utils/initialState';
+import type { Character, GameStatus } from '../types';
+import { initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from '../utils/storageKeys';
  * to stay in sync with RemoteScreen updates.
  */
 function PlayerScreenContent() {
-  const { value: state } = useStorage<GameState>(STORAGE_KEYS.STATUS);
+  const { value: state } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
 
   // Show loading/empty state if no game state is available
   if (!state) {
@@ -100,7 +100,7 @@ function PlayerScreenContent() {
 
 export function PlayerScreen() {
   return (
-    <StorageProvider<GameState> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameState}>
+    <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameStatus}>
       <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
         <PlayerScreenContent />
       </StorageProvider>

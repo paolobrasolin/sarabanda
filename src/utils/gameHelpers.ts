@@ -1,11 +1,11 @@
-import type { Character, GameState } from '../types';
+import type { Character, GameStatus } from '../types';
 
 /**
  * Helper functions for game state operations
- * These work with GameState and don't depend on React hooks
+ * These work with GameStatus and don't depend on React hooks
  */
 
-export function getAvailableCharacters(state: GameState): Character[] {
+export function getAvailableCharacters(state: GameStatus): Character[] {
   return state.characters.filter((char) => {
     const id = createCharacterId(char);
     return (
@@ -16,7 +16,7 @@ export function getAvailableCharacters(state: GameState): Character[] {
   });
 }
 
-export function getCategories(state: GameState) {
+export function getCategories(state: GameStatus) {
   const availableChars = getAvailableCharacters(state);
   const categoryMap = new Map<string, { remainingCharacters: number; totalCharacters: number }>();
 
@@ -49,11 +49,11 @@ export function getCategories(state: GameState) {
   }));
 }
 
-export function getCharacterById(state: GameState, id: string): Character | undefined {
+export function getCharacterById(state: GameStatus, id: string): Character | undefined {
   return state.characters.find((char) => createCharacterId(char) === id);
 }
 
-export function isCharacterUsed(state: GameState, character: Character): boolean {
+export function isCharacterUsed(state: GameStatus, character: Character): boolean {
   const id = createCharacterId(character);
   return state.usedCharacters.includes(id);
 }

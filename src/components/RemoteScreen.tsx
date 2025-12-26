@@ -1,8 +1,8 @@
 import { Button } from '@ariakit/react';
 import { useEffect, useRef } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
-import type { Character, GameState } from '../types';
-import { initialGameState } from '../utils/initialState';
+import type { Character, GameStatus } from '../types';
+import { initialGameStatus } from '../utils/initialState';
 import { endGame, setTimeRemaining, setTimerRunning, startGame, updateCharacters } from '../utils/stateUpdates';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
@@ -12,7 +12,7 @@ import { STORAGE_KEYS } from '../utils/storageKeys';
  * PlayerScreen listens to these changes via storage events.
  */
 function RemoteScreenContent() {
-  const { value: state, update: updateState } = useStorage<GameState>(STORAGE_KEYS.STATUS);
+  const { value: state, update: updateState } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
   const { value: savedPeople } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
   const timerIntervalRef = useRef<number | null>(null);
   const timeRemainingRef = useRef(state?.timeRemaining ?? 0);
@@ -232,7 +232,7 @@ function RemoteScreenContent() {
 
 export function RemoteScreen() {
   return (
-    <StorageProvider<GameState> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameState}>
+    <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameStatus}>
       <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
         <RemoteScreenContent />
       </StorageProvider>

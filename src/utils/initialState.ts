@@ -1,4 +1,4 @@
-import type { GameConfig, GameState } from '../types';
+import type { GameConfig, GameStatus } from '../types';
 
 export const initialGameConfig: GameConfig = {
   googleSheetUrl: '',
@@ -12,7 +12,7 @@ export const initialGameConfig: GameConfig = {
   nthTurnScores: [2, 1],
 };
 
-export const initialGameState: GameState = {
+export const initialGameStatus: GameStatus = {
   config: initialGameConfig,
   characters: [],
   usedCharacters: [],

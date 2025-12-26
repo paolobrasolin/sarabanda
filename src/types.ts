@@ -19,7 +19,7 @@ export interface GameConfig {
   nthTurnScores: number[]; // score for each turn (1st turn, 2nd turn, etc.)
 }
 
-export interface GameState {
+export interface GameStatus {
   config: GameConfig;
   characters: Character[];
   usedCharacters: string[];
