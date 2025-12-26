@@ -15,7 +15,7 @@
           packages = with pkgs; [nodejs pnpm];
         };
         packages = rec {
-          balcon = pkgs.stdenv.mkDerivation (finalAttrs: {
+          sarabanda = pkgs.stdenv.mkDerivation (finalAttrs: {
             pname = "sarabanda";
             inherit (builtins.fromJSON (builtins.readFile ./package.json)) version;
             src = ./.;
@@ -36,7 +36,7 @@
               cp -r dist $out
             '';
           });
-          default = balcon;
+          default = sarabanda;
         };
       }
     );
