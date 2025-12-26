@@ -9,9 +9,10 @@ export default defineConfig({
   html: {
     title: 'sarabanda',
     inject: 'body',
+    favicon: './src/assets/favicon.ico',
   },
   output: {
     inlineScripts: true,
     inlineStyles: true,
-  }
+  },
 });
