@@ -97,7 +97,7 @@ export function transitionToGuessing(state: GameStatus): GameStatus {
     return state;
   }
 
-  const newState = {
+  const newState: GameStatus = {
     ...state,
     phase: 'guessing',
   };
@@ -203,12 +203,13 @@ export function setPhase(state: GameStatus, phase: GamePhase): GameStatus {
 /**
  * Transitions back to prepping phase, clearing all game state.
  * This allows reconfiguration of the game.
+ * Note: usedCharacters are NOT reset - they persist until manually reset.
  */
 export function transitionToPrepping(state: GameStatus): GameStatus {
   return {
     ...state,
     phase: 'prepping',
-    usedCharacters: [],
+    // usedCharacters are NOT reset - they persist across games
     currentRound: 0,
     currentCategory: null,
     currentCharacter: null,

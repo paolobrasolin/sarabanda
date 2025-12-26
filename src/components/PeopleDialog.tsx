@@ -12,9 +12,10 @@ import {
 } from '@ariakit/react';
 import React, { useEffect, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
-import type { Character, GameConfig } from '../types';
+import type { Character, GameConfig, GameStatus } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
-import { initialGameConfig } from '../utils/initialState';
+import { createCharacterId } from '../utils/gameHelpers';
+import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 interface PeopleDialogProps {
@@ -25,6 +26,7 @@ interface PeopleDialogProps {
 function PeopleDialogContent({ onClose }: { onClose: () => void }) {
   const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
+  const { value: gameStatus, update: updateGameStatus } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
 
   const [isLoading, setIsLoading] = useState(false);
   const [googleSheetUrl, setGoogleSheetUrl] = useState<string>(() => {
@@ -165,6 +167,27 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const handleResetUsedCharacters = () => {
+    if (!gameStatus) return;
+    
+    if (window.confirm('Are you sure you want to reset all used characters? This will mark all characters as available again.')) {
+      updateGameStatus({
+        ...gameStatus,
+        usedCharacters: [],
+      });
+    }
+  };
+
+  // Check if a character is used
+  const isCharacterUsed = (character: Character): boolean => {
+    if (!gameStatus) return false;
+    const characterId = createCharacterId(character);
+    return gameStatus.usedCharacters.includes(characterId);
+  };
+
+  // Count used characters
+  const usedCount = loadedCharacters.filter((char) => isCharacterUsed(char)).length;
+
   return (
     <Dialog className="people-modal-dialog" modal>
       <DialogHeading className="people-modal-heading">Load Characters</DialogHeading>
@@ -206,17 +229,22 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
                         <th>Given Names</th>
                         <th>Category</th>
                         <th>Difficulty</th>
+                        <th>Used</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {loadedCharacters.map((character, index) => (
-                        <tr key={index}>
-                          <td>{character.family_names}</td>
-                          <td>{character.given_names}</td>
-                          <td>{character.category}</td>
-                          <td>{character.difficulty}</td>
-                        </tr>
-                      ))}
+                      {loadedCharacters.map((character, index) => {
+                        const used = isCharacterUsed(character);
+                        return (
+                          <tr key={index} className={used ? 'character-used' : ''}>
+                            <td>{character.family_names}</td>
+                            <td>{character.given_names}</td>
+                            <td>{character.category}</td>
+                            <td>{character.difficulty}</td>
+                            <td>{used ? '✓' : ''}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -226,6 +254,24 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
         </FormProvider>
       </div>
       <div className="people-modal-actions">
+        <Button
+          className="reset-used-btn"
+          onClick={handleResetUsedCharacters}
+          disabled={usedCount === 0}
+          style={{
+            padding: '0.75rem 2rem',
+            fontSize: '1rem',
+            backgroundColor: usedCount > 0 ? 'var(--accent-tertiary)' : 'var(--bg-secondary)',
+            color: usedCount > 0 ? 'white' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: usedCount > 0 ? 'pointer' : 'not-allowed',
+            fontWeight: 500,
+            opacity: usedCount > 0 ? 1 : 0.6,
+          }}
+        >
+          Reset Used {usedCount > 0 && `(${usedCount})`}
+        </Button>
         <DialogDismiss className="people-modal-close-btn" onClick={onClose}>
           Close
         </DialogDismiss>
@@ -244,7 +290,9 @@ export function PeopleDialog({ open, onClose }: PeopleDialogProps) {
     >
       <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={false} defaultValue={initialGameConfig}>
         <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={false} defaultValue={null}>
-          <PeopleDialogContent onClose={onClose} />
+          <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameStatus}>
+            <PeopleDialogContent onClose={onClose} />
+          </StorageProvider>
         </StorageProvider>
       </StorageProvider>
     </DialogProvider>

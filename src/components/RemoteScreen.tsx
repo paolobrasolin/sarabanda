@@ -18,7 +18,6 @@ import {
   setTimeRemaining,
   setTimerRunning,
   startGame,
-  transitionToChoosing,
   transitionToGuessing,
   transitionToPrepping,
   updateCharacters,
@@ -165,7 +164,7 @@ function RemoteScreenContent() {
   const currentPhase = state.phase || 'prepping';
 
   const handleBackToPrepping = () => {
-    if (confirm('Are you sure you want to go back to prepping? This will clear all game progress.')) {
+    if (confirm('Are you sure you want to go back to prepping? This will clear current game progress, but used characters will be preserved.')) {
       updateState(transitionToPrepping(state));
     }
   };
@@ -315,60 +314,105 @@ function RemoteScreenContent() {
 
   return (
     <div className="remote-screen">
-      <section className="remote-controls">
-        <div className="control-buttons">
-          <button
-            className="config-btn"
-            onClick={() => setIsPeopleDialogOpen(true)}
-            aria-label="Load characters"
-            title="Load characters from Google Sheet"
-          >
-            People
-          </button>
-          <button
-            className="config-btn"
-            onClick={() => {
-              console.log('Config button clicked, opening modal');
-              setIsConfigModalOpen(true);
-            }}
-            aria-label="Open configuration"
-            title="Open configuration"
-          >
-            Config
-          </button>
-          {currentPhase === 'prepping' ? (
-            <>
-              <Button
-                onClick={handleStartGame}
-                className="control-btn control-btn-primary"
-                disabled={state.characters.length === 0}
-              >
-                Start Game
-              </Button>
-            </>
-          ) : currentPhase === 'choosing' ? (
-            <>
-              <Button onClick={handleBackToPrepping} className="control-btn">
-                Back to Prepping
-              </Button>
-            </>
-          ) : currentPhase === 'guessing' ? (
-            <>
-              <Button onClick={handleEndGame} className="control-btn control-btn-danger">
-                End Game
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={handleEndGame} className="control-btn control-btn-danger">
-                End Game
-              </Button>
-            </>
-          )}
+      <section className="remote-status">
+        <h2>Game Manager</h2>
+        <div className="game-manager-card">
+          <div className="game-manager-info">
+            <dl>
+              <div className="character-preview-field">
+                <dt>Phase:</dt>
+                <dd>{currentPhase}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Characters loaded:</dt>
+                <dd>{state.characters.length}</dd>
+              </div>
+              {currentPhase !== 'prepping' && (
+                <>
+                  <div className="character-preview-field">
+                    <dt>Current round:</dt>
+                    <dd>{state.currentRound}</dd>
+                  </div>
+                  {currentPhase === 'guessing' && (
+                    <div className="character-preview-field">
+                      <dt>Current turn:</dt>
+                      <dd>
+                        {state.turnType === 'free-for-all'
+                          ? 'Free-for-All'
+                          : state.currentTeamIndex !== null
+                            ? `Turn ${state.currentTurn} - ${config.teamNames[state.currentTeamIndex]}`
+                            : 'No turn active'}
+                      </dd>
+                    </div>
+                  )}
+                </>
+              )}
+              <div className="character-preview-field">
+                <dt>Used characters:</dt>
+                <dd>{state.usedCharacters.length}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Current category:</dt>
+                <dd>{state.currentCategory || 'None'}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Timer running:</dt>
+                <dd>{state.isTimerRunning ? 'Yes' : 'No'}</dd>
+              </div>
+              <div className="character-preview-field">
+                <dt>Time remaining:</dt>
+                <dd>{state.timeRemaining}s</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="game-manager-actions">
+            <button
+              className="config-btn"
+              onClick={() => setIsPeopleDialogOpen(true)}
+              disabled={state.isGameActive}
+              aria-label="Load characters"
+              title={state.isGameActive ? "Cannot load characters while game is active" : "Load characters from Google Sheet"}
+            >
+              People
+            </button>
+            <button
+              className="config-btn"
+              onClick={() => {
+                console.log('Config button clicked, opening modal');
+                setIsConfigModalOpen(true);
+              }}
+              aria-label="Open configuration"
+              title="Open configuration"
+            >
+              Config
+            </button>
+            <Button
+              onClick={handleStartGame}
+              className="control-btn control-btn-primary"
+              disabled={currentPhase !== 'prepping' || state.characters.length === 0}
+            >
+              Start Game
+            </Button>
+            <Button
+              onClick={handleBackToPrepping}
+              className="control-btn"
+              disabled={currentPhase !== 'choosing'}
+            >
+              Back to Prepping
+            </Button>
+            <Button
+              onClick={handleEndGame}
+              className="control-btn control-btn-danger"
+              disabled={currentPhase === 'prepping' || currentPhase === 'choosing'}
+            >
+              End Game
+            </Button>
+          </div>
         </div>
       </section>
 
       <section className="remote-character-preview">
+        <h2>Round Manager</h2>
         <div className="character-preview-card">
           <div className="character-preview-image">
             {state.currentCharacter ? (
@@ -515,42 +559,6 @@ function RemoteScreenContent() {
         )}
       </section>
 
-      <section className="remote-status">
-        <h2>Game Status</h2>
-        <dl className="status-list">
-          <dt>Phase:</dt>
-          <dd>{currentPhase}</dd>
-          <dt>Characters loaded:</dt>
-          <dd>{state.characters.length}</dd>
-          {currentPhase !== 'prepping' && (
-            <>
-              <dt>Current round:</dt>
-              <dd>{state.currentRound}</dd>
-              {currentPhase === 'guessing' && (
-                <>
-                  <dt>Current turn:</dt>
-                  <dd>
-                    {state.turnType === 'free-for-all'
-                      ? 'Free-for-All'
-                      : state.currentTeamIndex !== null
-                        ? `Turn ${state.currentTurn} - ${config.teamNames[state.currentTeamIndex]}`
-                        : 'No turn active'}
-                  </dd>
-                </>
-              )}
-            </>
-          )}
-          <dt>Used characters:</dt>
-          <dd>{state.usedCharacters.length}</dd>
-          <dt>Current category:</dt>
-          <dd>{state.currentCategory || 'None'}</dd>
-          <dt>Timer running:</dt>
-          <dd>{state.isTimerRunning ? 'Yes' : 'No'}</dd>
-          <dt>Time remaining:</dt>
-          <dd>{state.timeRemaining}s</dd>
-        </dl>
-      </section>
-
       <section className="remote-scores">
         <h2>Scores</h2>
         <div className="teams">
@@ -580,15 +588,6 @@ function RemoteScreenContent() {
             </p>
           </section>
         )}
-
-      <section className="remote-info">
-        <h2>Information</h2>
-        <p>
-          This is the Game Master control interface. All changes made here will be reflected on the Player screen in
-          real-time via localStorage synchronization.
-        </p>
-        <p>Full game controls (timer, hints, scoring, etc.) will be implemented in Phase 4.</p>
-      </section>
 
       <ConfigModal
         open={isConfigModalOpen}
