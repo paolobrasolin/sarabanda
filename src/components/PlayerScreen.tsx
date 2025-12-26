@@ -68,8 +68,10 @@ function PlayerScreenContent() {
       </div>
 
       <div className="player-sidebar">
-        <div className="player-mascot">
-          <img src={mascotImage} alt="Sarabanda Mascot" className="player-mascot-image" />
+        <div className="player-timer">
+          <div className={`player-timer-value ${state.isTimerRunning ? 'timer-running' : 'timer-stopped'}`}>
+            {state.isTimerRunning && state.timeRemaining > 0 ? `${state.timeRemaining}s` : '--:--'}
+          </div>
         </div>
 
         <div className="player-scoreboard">
@@ -83,10 +85,8 @@ function PlayerScreenContent() {
           </div>
         </div>
 
-        <div className="player-timer">
-          <div className={`player-timer-value ${state.isTimerRunning ? 'timer-running' : 'timer-stopped'}`}>
-            {state.isTimerRunning && state.timeRemaining > 0 ? `${state.timeRemaining}s` : '--:--'}
-          </div>
+        <div className="player-mascot">
+          <img src={mascotImage} alt="Sarabanda Mascot" className="player-mascot-image" />
         </div>
       </div>
     </div>
