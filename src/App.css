@@ -53,6 +53,20 @@ body {
   letter-spacing: -0.02em;
 }
 
+.config-warning {
+  background: #fff5f5;
+  border: 2px solid #feb2b2;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-warning p {
+  margin: 0;
+  color: #c53030;
+  line-height: 1.6;
+}
+
 .config-section {
   background: var(--bg-primary);
   border: 2px solid var(--border);
@@ -746,10 +760,10 @@ body {
   background: transparent;
   border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   cursor: pointer;
   color: var(--text-primary);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 500;
   font-family: inherit;
   display: flex;
@@ -781,17 +795,11 @@ body {
   padding: 1.5rem;
 }
 
-.remote-controls h2 {
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
 .control-buttons {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .control-btn {
@@ -863,6 +871,67 @@ body {
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
+}
+
+.remote-game-characters {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.remote-game-characters h2 {
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.game-characters-table-container {
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.game-characters-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.game-characters-table thead {
+  background: var(--bg-accent);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.game-characters-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--border);
+}
+
+.game-characters-table td {
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.game-characters-table tbody tr:hover {
+  background: var(--bg-accent);
+}
+
+.game-characters-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .remote-scores {

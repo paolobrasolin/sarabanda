@@ -2,9 +2,17 @@ import { Button } from '@ariakit/react';
 import { useEffect, useRef, useState } from 'react';
 import { ConfigModal } from './ConfigDialog';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
-import type { Character, GameStatus } from '../types';
-import { initialGameStatus } from '../utils/initialState';
-import { endGame, setTimeRemaining, setTimerRunning, startGame, updateCharacters } from '../utils/stateUpdates';
+import type { Character, GameConfig, GameStatus } from '../types';
+import { initialGameConfig, initialGameStatus } from '../utils/initialState';
+import {
+  endGame,
+  setTimeRemaining,
+  setTimerRunning,
+  startGame,
+  transitionToReady,
+  transitionToSetup,
+  updateCharacters,
+} from '../utils/stateUpdates';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -14,11 +22,37 @@ import { STORAGE_KEYS } from '../utils/storageKeys';
  */
 function RemoteScreenContent() {
   const { value: state, update: updateState } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
+  const { value: config } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { value: savedPeople } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
   const timerIntervalRef = useRef<number | null>(null);
   const timeRemainingRef = useRef(state?.timeRemaining ?? 0);
   const stateRef = useRef(state);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+
+  // Migrate old state format: ensure phase and gameCharacters exist
+  useEffect(() => {
+    if (state && (!('phase' in state) || !('gameCharacters' in state))) {
+      const migratedState = {
+        ...state,
+        phase: (state as any).phase || 'setup',
+        gameCharacters: (state as any).gameCharacters || [],
+      };
+      updateState(migratedState);
+    }
+  }, [state, updateState]);
+
+  // Sync config from separate storage into state.config (for backward compatibility with state update functions)
+  // This ensures state update functions that reference state.config continue to work
+  useEffect(() => {
+    if (state && config) {
+      // Only update if config actually differs to avoid infinite loops
+      const stateConfigString = JSON.stringify(state.config);
+      const configString = JSON.stringify(config);
+      if (stateConfigString !== configString) {
+        updateState({ ...state, config });
+      }
+    }
+  }, [state, config, updateState]);
 
   // Sync characters from PEOPLE storage to STATUS if STATUS doesn't have them
   useEffect(() => {
@@ -78,8 +112,8 @@ function RemoteScreenContent() {
     };
   }, [state, updateState]);
 
-  // Handle null state
-  if (!state) {
+  // Handle null state or config
+  if (!state || !config) {
     return (
       <div className="remote-screen">
         <section className="remote-header">
@@ -90,9 +124,42 @@ function RemoteScreenContent() {
     );
   }
 
-  const handleStartGame = () => {
+  // Ensure phase is always set (fallback for migration)
+  const currentPhase = state.phase || 'setup';
+
+  const handlePrepareGame = () => {
+    if (!config) {
+      alert('Configuration not loaded. Please configure the game first.');
+      return;
+    }
     if (state.characters.length === 0) {
       alert('Please configure the game first by loading characters from a Google Sheet.');
+      return;
+    }
+    if (config.selectedDifficulties.length === 0 || config.selectedCategories.length === 0) {
+      alert('Please select at least one difficulty and one category in the configuration.');
+      return;
+    }
+    // Merge config into state for the transition function
+    const stateWithConfig = { ...state, config };
+    const newState = transitionToReady(stateWithConfig);
+    if (newState.phase === 'setup') {
+      alert('Failed to generate game characters. Please check your configuration and try again.');
+      return;
+    }
+    updateState(newState);
+  };
+
+  const handleBackToSetup = () => {
+    if (confirm('Are you sure you want to go back to setup? This will clear all game preparation.')) {
+      updateState(transitionToSetup(state));
+    }
+  };
+
+  const handleStartGame = () => {
+    const currentPhase = state.phase || 'setup';
+    if (currentPhase !== 'ready') {
+      alert('Please prepare the game first.');
       return;
     }
     updateState(startGame(state));
@@ -133,9 +200,8 @@ function RemoteScreenContent() {
 
   return (
     <div className="remote-screen">
-      <section className="remote-header">
-        <div className="remote-header-top">
-          <h1>Game Master Control</h1>
+      <section className="remote-controls">
+        <div className="control-buttons">
           <button
             className="config-btn"
             onClick={() => {
@@ -147,24 +213,28 @@ function RemoteScreenContent() {
           >
             Config
           </button>
-        </div>
-        <div className="remote-info">
-          <div>
-            {state.isGameActive ? (
-              <>
-                Round {state.currentRound} of {state.config.numberOfRounds}
-              </>
-            ) : (
-              'Game Not Active'
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="remote-controls">
-        <h2>Game Controls</h2>
-        <div className="control-buttons">
-          {!state.isGameActive ? (
+          {currentPhase === 'setup' ? (
+            <Button
+              onClick={handlePrepareGame}
+              className="control-btn control-btn-primary"
+              disabled={state.characters.length === 0}
+            >
+              Prepare Game
+            </Button>
+          ) : currentPhase === 'ready' ? (
+            <>
+              <Button
+                onClick={handleStartGame}
+                className="control-btn control-btn-primary"
+                disabled={state.gameCharacters.length === 0}
+              >
+                Start Game
+              </Button>
+              <Button onClick={handleBackToSetup} className="control-btn">
+                Back to Setup
+              </Button>
+            </>
+          ) : !state.isGameActive ? (
             <>
               <Button
                 onClick={handleStartGame}
@@ -196,11 +266,49 @@ function RemoteScreenContent() {
         </div>
       </section>
 
+      {currentPhase === 'ready' && (
+        <section className="remote-game-characters">
+          <h2>Game Characters ({(state.gameCharacters || []).length} total)</h2>
+          <div className="game-characters-table-container">
+            <table className="game-characters-table">
+              <thead>
+                <tr>
+                  <th>Round</th>
+                  <th>Category</th>
+                  <th>Name</th>
+                  <th>Difficulty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(state.gameCharacters || []).map((gc, index) => (
+                  <tr key={`${gc.round}-${index}`}>
+                    <td>{gc.round}</td>
+                    <td>{gc.category}</td>
+                    <td>
+                      {gc.character.given_names} {gc.character.family_names}
+                    </td>
+                    <td>{gc.character.difficulty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <section className="remote-status">
         <h2>Game Status</h2>
         <dl className="status-list">
+          <dt>Phase:</dt>
+          <dd>{currentPhase}</dd>
           <dt>Characters loaded:</dt>
           <dd>{state.characters.length}</dd>
+          {currentPhase === 'ready' && (
+            <>
+              <dt>Game characters:</dt>
+              <dd>{(state.gameCharacters || []).length}</dd>
+            </>
+          )}
           <dt>Used characters:</dt>
           <dd>{state.usedCharacters.length}</dd>
           <dt>Current category:</dt>
@@ -215,7 +323,7 @@ function RemoteScreenContent() {
       <section className="remote-scores">
         <h2>Scores</h2>
         <div className="teams">
-          {state.config.teamNames.map((team) => (
+          {config.teamNames.map((team) => (
             <div key={team} className="team-score">
               <span className="team-name">{team}</span>
               <span className="team-points">{state.scores[team] || 0}</span>
@@ -224,7 +332,7 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      {state.characters.length === 0 && (
+      {currentPhase === 'setup' && state.characters.length === 0 && (
         <section className="remote-warning">
           <p>
             <strong>No characters loaded.</strong> Please go to the Config screen to load characters from a Google
@@ -232,6 +340,16 @@ function RemoteScreenContent() {
           </p>
         </section>
       )}
+
+      {currentPhase === 'setup' &&
+        (config.selectedDifficulties.length === 0 || config.selectedCategories.length === 0) && (
+          <section className="remote-warning">
+            <p>
+              <strong>Configuration incomplete.</strong> Please select at least one difficulty and one category in the
+              Config screen.
+            </p>
+          </section>
+        )}
 
       <section className="remote-info">
         <h2>Information</h2>
@@ -257,9 +375,11 @@ function RemoteScreenContent() {
 
 export function RemoteScreen() {
   return (
-    <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameStatus}>
-      <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
-        <RemoteScreenContent />
+    <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={true} defaultValue={initialGameConfig}>
+      <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameStatus}>
+        <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
+          <RemoteScreenContent />
+        </StorageProvider>
       </StorageProvider>
     </StorageProvider>
   );

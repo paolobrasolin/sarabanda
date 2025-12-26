@@ -19,9 +19,19 @@ export interface GameConfig {
   nthTurnScores: number[]; // score for each turn (1st turn, 2nd turn, etc.)
 }
 
+export type GamePhase = 'setup' | 'ready';
+
+export interface GameCharacter {
+  character: Character;
+  round: number;
+  category: string;
+}
+
 export interface GameStatus {
+  phase: GamePhase;
   config: GameConfig;
   characters: Character[];
+  gameCharacters: GameCharacter[]; // Selected characters for all rounds
   usedCharacters: string[];
   currentRound: number;
   currentCategory: string | null;

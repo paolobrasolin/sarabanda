@@ -28,6 +28,8 @@ function ConfigDialogContent() {
   const { value: gameStatus } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
   const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { update: updatePeopleStorage } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
+  
+  const isConfigLocked = gameStatus?.phase === 'ready';
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -142,6 +144,10 @@ function ConfigDialogContent() {
   // Use a ref to track the last saved config to avoid infinite loops
   const lastSavedConfigRef = React.useRef<string | null>(null);
   useEffect(() => {
+    // Don't save config if locked (ready phase)
+    if (isConfigLocked) {
+      return;
+    }
     const configString = JSON.stringify(config);
     // Only update if config actually changed
     if (lastSavedConfigRef.current !== configString) {
@@ -149,7 +155,7 @@ function ConfigDialogContent() {
       updateConfigStorage(config);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, updateConfigStorage]);
+  }, [config, updateConfigStorage, isConfigLocked]);
 
   // Persist loadedCharacters to localStorage on every change
   const lastSavedPeopleRef = React.useRef<string | null>(null);
@@ -252,6 +258,13 @@ function ConfigDialogContent() {
 
   return (
     <div className="configuration-screen">
+      {isConfigLocked && (
+        <section className="config-warning">
+          <p>
+            <strong>Configuration is locked.</strong> The game is in 'ready' phase. Please go back to setup phase to modify configuration.
+          </p>
+        </section>
+      )}
       <section className="config-section">
         <FormProvider>
           <Form>
@@ -264,9 +277,9 @@ function ConfigDialogContent() {
                   value={config.googleSheetUrl}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   placeholder="https://docs.google.com/spreadsheets/d/..."
-                  disabled={isLoading}
+                  disabled={isLoading || isConfigLocked}
                 />
-                <Button className="reload-btn" onClick={handleLoadSheet} disabled={isLoading || !config.googleSheetUrl}>
+                <Button className="reload-btn" onClick={handleLoadSheet} disabled={isLoading || !config.googleSheetUrl || isConfigLocked}>
                   {isLoading ? 'Loading...' : 'Load'}
                 </Button>
               </div>
@@ -286,6 +299,7 @@ function ConfigDialogContent() {
                     const value = parseInt(e.target.value) || 1;
                     setNumberOfRounds(Math.max(1, value));
                   }}
+                  disabled={isConfigLocked}
                 />
               </FormGroup>
 
@@ -293,6 +307,7 @@ function ConfigDialogContent() {
                 <SelectProvider
                   value={config.selectedDifficulties || []}
                   setValue={(value) => {
+                    if (isConfigLocked) return;
                     setConfig((prev) => ({
                       ...prev,
                       selectedDifficulties: Array.isArray(value) ? value.sort() : prev.selectedDifficulties || [],
@@ -300,7 +315,7 @@ function ConfigDialogContent() {
                   }}
                 >
                   <SelectLabel>Difficulties</SelectLabel>
-                  <Select className="select-button" required>
+                  <Select className="select-button" required disabled={isConfigLocked}>
                     {!config.selectedDifficulties || config.selectedDifficulties.length === 0
                       ? 'No selection'
                       : config.selectedDifficulties.length === 1
@@ -323,6 +338,7 @@ function ConfigDialogContent() {
                 <SelectProvider
                   value={config.selectedCategories || []}
                   setValue={(value) => {
+                    if (isConfigLocked) return;
                     setConfig((prev) => ({
                       ...prev,
                       selectedCategories: Array.isArray(value) ? value.sort() : prev.selectedCategories || [],
@@ -330,7 +346,7 @@ function ConfigDialogContent() {
                   }}
                 >
                   <SelectLabel>Categories</SelectLabel>
-                  <Select className="select-button">
+                  <Select className="select-button" disabled={isConfigLocked}>
                     {!config.selectedCategories || config.selectedCategories.length === 0
                       ? 'No selection'
                       : config.selectedCategories.length === 1
@@ -365,6 +381,7 @@ function ConfigDialogContent() {
                       const value = parseInt(e.target.value) || 2;
                       setNumberOfTeams(Math.max(2, value));
                     }}
+                    disabled={isConfigLocked}
                   />
                 </FormGroup>
 
@@ -376,10 +393,12 @@ function ConfigDialogContent() {
                       type="text"
                       value={team}
                       onChange={(e) => {
+                        if (isConfigLocked) return;
                         const newTeams = [...(config.teamNames || [])];
                         newTeams[index] = e.target.value;
                         setConfig((prev) => ({ ...prev, teamNames: newTeams }));
                       }}
+                      disabled={isConfigLocked}
                     />
                   </FormGroup>
                 ))}
@@ -400,6 +419,7 @@ function ConfigDialogContent() {
                         freeTurnDuration: parseInt(e.target.value) || 30,
                       }))
                     }
+                    disabled={isConfigLocked}
                   />
                 </FormGroup>
 
@@ -415,10 +435,12 @@ function ConfigDialogContent() {
                         max="300"
                         value={duration.toString()}
                         onChange={(e) => {
+                          if (isConfigLocked) return;
                           const newDurations = [...(config.nthTurnDurations || [])];
                           newDurations[index] = parseInt(e.target.value) || 60;
                           setConfig((prev) => ({ ...prev, nthTurnDurations: newDurations }));
                         }}
+                        disabled={isConfigLocked}
                       />
                     </FormGroup>
                   );
@@ -440,6 +462,7 @@ function ConfigDialogContent() {
                         freeTurnScore: parseFloat(e.target.value) || 0,
                       }))
                     }
+                    disabled={isConfigLocked}
                   />
                 </FormGroup>
 
@@ -455,6 +478,7 @@ function ConfigDialogContent() {
                         min="0"
                         value={score.toString()}
                         onChange={(e) => {
+                          if (isConfigLocked) return;
                           const newTurnScores = [...(config.nthTurnScores || [])];
                           newTurnScores[index] = parseFloat(e.target.value) || 0;
                           setConfig((prev) => ({
@@ -462,6 +486,7 @@ function ConfigDialogContent() {
                             nthTurnScores: newTurnScores,
                           }));
                         }}
+                        disabled={isConfigLocked}
                       />
                     </FormGroup>
                   );

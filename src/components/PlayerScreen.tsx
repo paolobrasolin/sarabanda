@@ -1,6 +1,6 @@
 import { StorageProvider, useStorage } from '../hooks/useStorage';
-import type { Character, GameStatus } from '../types';
-import { initialGameStatus } from '../utils/initialState';
+import type { Character, GameConfig, GameStatus } from '../types';
+import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -10,9 +10,13 @@ import { STORAGE_KEYS } from '../utils/storageKeys';
  */
 function PlayerScreenContent() {
   const { value: state } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
+  const { value: config } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
+
+  // Ensure phase is always set (fallback for migration)
+  const currentPhase = state?.phase || 'setup';
 
   // Show loading/empty state if no game state is available
-  if (!state) {
+  if (!state || !config) {
     return (
       <div className="game-screen">
         <section className="game-header">
@@ -33,9 +37,13 @@ function PlayerScreenContent() {
       <section className="game-header">
         <h1>Quiz Game</h1>
         <div className="game-info">
-          {state.isGameActive ? (
+          {currentPhase === 'setup' ? (
+            'Setting up game...'
+          ) : currentPhase === 'ready' ? (
+            `Ready - ${(state.gameCharacters || []).length} characters prepared`
+          ) : state.isGameActive ? (
             <>
-              Round {state.currentRound} of {state.config.numberOfRounds}
+              Round {state.currentRound} of {config.numberOfRounds}
             </>
           ) : (
             'Game Not Started'
@@ -46,7 +54,7 @@ function PlayerScreenContent() {
       <section className="scoreboard">
         <h2>Scores</h2>
         <div className="teams">
-          {state.config.teamNames.map((team) => (
+          {config.teamNames.map((team) => (
             <div key={team} className="team-score">
               <span className="team-name">{team}</span>
               <span className="team-points">{state.scores[team] || 0}</span>
@@ -67,7 +75,17 @@ function PlayerScreenContent() {
           </section>
         )}
 
-        {!state.isGameActive ? (
+        {currentPhase === 'setup' ? (
+          <div className="game-not-started">
+            <h2>Game Setup</h2>
+            <p>The Game Master is configuring the game. Please wait...</p>
+          </div>
+        ) : currentPhase === 'ready' && !state.isGameActive ? (
+          <div className="game-not-started">
+            <h2>Ready to Play</h2>
+            <p>The game is prepared and ready to start!</p>
+          </div>
+        ) : !state.isGameActive ? (
           <div className="game-not-started">
             <h2>Ready to Play</h2>
             <p>Configure your game settings and start playing!</p>
@@ -100,9 +118,11 @@ function PlayerScreenContent() {
 
 export function PlayerScreen() {
   return (
-    <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameStatus}>
-      <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
-        <PlayerScreenContent />
+    <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={true} defaultValue={initialGameConfig}>
+      <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={true} defaultValue={initialGameStatus}>
+        <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
+          <PlayerScreenContent />
+        </StorageProvider>
       </StorageProvider>
     </StorageProvider>
   );
