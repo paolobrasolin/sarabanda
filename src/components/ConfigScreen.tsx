@@ -18,7 +18,6 @@ import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameState } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
 import { initialGameConfig, initialGameState } from '../utils/initialState';
-import { updateCharacters, updateConfig } from '../utils/stateUpdates';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 function ConfigScreenContent() {
@@ -246,23 +245,6 @@ function ConfigScreenContent() {
       setIsLoading(false);
     }
   };
-
-  const _handleStartGame = () => {
-    if (!gameState) return;
-
-    // Update game state with config and characters
-    let newState = updateConfig(gameState, config);
-    newState = updateCharacters(newState, loadedCharacters);
-
-    // Save to storage
-    updateStateStorage(newState);
-  };
-
-  const _canStartGame =
-    validationStatus?.isValid &&
-    (config.teamNames?.length || 0) >= 2 &&
-    (config.selectedDifficulties?.length || 0) >= 1 &&
-    (config.selectedCategories?.length || 0) >= 1;
 
   return (
     <div className="configuration-screen">
