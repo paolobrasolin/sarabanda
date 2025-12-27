@@ -19,7 +19,6 @@ import {
   setTimerRunning,
   startGame,
   transitionToGuessing,
-  transitionToPrepping,
   updateCharacters,
 } from '../utils/stateUpdates';
 import { createCharacterId } from '../utils/gameHelpers';
@@ -162,12 +161,6 @@ function RemoteScreenContent() {
 
   // Ensure phase is always set (fallback for migration)
   const currentPhase = state.phase || 'prepping';
-
-  const handleBackToPrepping = () => {
-    if (confirm('Are you sure you want to go back to prepping? This will clear current game progress, but used characters will be preserved.')) {
-      updateState(transitionToPrepping(state));
-    }
-  };
 
   const handleStartGame = () => {
     if (!config) {
@@ -317,54 +310,6 @@ function RemoteScreenContent() {
       <section className="remote-status">
         <h2>Game Manager</h2>
         <div className="game-manager-card">
-          <div className="game-manager-info">
-            <dl>
-              <div className="character-preview-field">
-                <dt>Phase:</dt>
-                <dd>{currentPhase}</dd>
-              </div>
-              <div className="character-preview-field">
-                <dt>Characters loaded:</dt>
-                <dd>{state.characters.length}</dd>
-              </div>
-              {currentPhase !== 'prepping' && (
-                <>
-                  <div className="character-preview-field">
-                    <dt>Current round:</dt>
-                    <dd>{state.currentRound}</dd>
-                  </div>
-                  {currentPhase === 'guessing' && (
-                    <div className="character-preview-field">
-                      <dt>Current turn:</dt>
-                      <dd>
-                        {state.turnType === 'free-for-all'
-                          ? 'Free-for-All'
-                          : state.currentTeamIndex !== null
-                            ? `Turn ${state.currentTurn} - ${config.teamNames[state.currentTeamIndex]}`
-                            : 'No turn active'}
-                      </dd>
-                    </div>
-                  )}
-                </>
-              )}
-              <div className="character-preview-field">
-                <dt>Used characters:</dt>
-                <dd>{state.usedCharacters.length}</dd>
-              </div>
-              <div className="character-preview-field">
-                <dt>Current category:</dt>
-                <dd>{state.currentCategory || 'None'}</dd>
-              </div>
-              <div className="character-preview-field">
-                <dt>Timer running:</dt>
-                <dd>{state.isTimerRunning ? 'Yes' : 'No'}</dd>
-              </div>
-              <div className="character-preview-field">
-                <dt>Time remaining:</dt>
-                <dd>{state.timeRemaining}s</dd>
-              </div>
-            </dl>
-          </div>
           <div className="game-manager-actions">
             <button
               className="config-btn"
@@ -394,16 +339,9 @@ function RemoteScreenContent() {
               Start Game
             </Button>
             <Button
-              onClick={handleBackToPrepping}
-              className="control-btn"
-              disabled={currentPhase !== 'choosing'}
-            >
-              Back to Prepping
-            </Button>
-            <Button
               onClick={handleEndGame}
               className="control-btn control-btn-danger"
-              disabled={currentPhase === 'prepping' || currentPhase === 'choosing'}
+              disabled={currentPhase === 'prepping'}
             >
               End Game
             </Button>
@@ -412,7 +350,10 @@ function RemoteScreenContent() {
       </section>
 
       <section className="remote-character-preview">
-        <h2>Round Manager</h2>
+        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Round Manager
+          <span>{state.currentRound > 0 ? `Round ${state.currentRound}` : 'No round active'}</span>
+        </h2>
         <div className="character-preview-card">
           <div className="character-preview-image">
             {state.currentCharacter ? (
@@ -445,9 +386,6 @@ function RemoteScreenContent() {
             </dl>
           </div>
           <div className="character-preview-actions">
-            <div className="character-preview-round">
-              {state.currentRound > 0 ? `Round ${state.currentRound}` : 'No round active'}
-            </div>
             <Button
               onClick={handleConfirmCharacter}
               className="control-btn control-btn-primary"
@@ -467,12 +405,22 @@ function RemoteScreenContent() {
       </section>
 
       <section className="remote-turn-manager">
-        <h2>Turn Manager</h2>
-        {currentPhase === 'guessing' ? (
-          state.turnType === 'free-for-all' ? (
-            <div className="turn-info">
-              <strong>Free-for-All</strong>
-              <div className="turn-actions">
+        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Turn Manager
+          <span>
+            {currentPhase === 'guessing' 
+              ? state.turnType === 'free-for-all'
+                ? 'Free-for-All'
+                : state.currentTeamIndex !== null
+                  ? config.teamNames[state.currentTeamIndex]
+                  : 'No Turn Active'
+              : 'No Turn Active'}
+          </span>
+        </h2>
+        <div className="turn-actions">
+          {currentPhase === 'guessing' ? (
+            state.turnType === 'free-for-all' ? (
+              <>
                 {config.teamNames.map((team, index) => (
                   <Button
                     key={team}
@@ -488,24 +436,15 @@ function RemoteScreenContent() {
                 >
                   No Points
                 </Button>
-              </div>
-              <div className="turn-timer-control">
                 <Button
                   onClick={handleStartStopTimer}
                   className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
                 >
                   {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
                 </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="turn-info">
-              <strong>
-                {state.currentTeamIndex !== null
-                  ? `${config.teamNames[state.currentTeamIndex]}'s Turn`
-                  : 'No Turn Active'}
-              </strong>
-              <div className="turn-actions">
+              </>
+            ) : (
+              <>
                 <Button
                   onClick={onCorrectAnswer}
                   className="control-btn control-btn-primary"
@@ -518,21 +457,16 @@ function RemoteScreenContent() {
                 >
                   Incorrect/Timeout
                 </Button>
-              </div>
-              <div className="turn-timer-control">
                 <Button
                   onClick={handleStartStopTimer}
                   className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
                 >
                   {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
                 </Button>
-              </div>
-            </div>
-          )
-        ) : (
-          <div className="turn-info">
-            <strong>No Turn Active</strong>
-            <div className="turn-actions">
+              </>
+            )
+          ) : (
+            <>
               <Button
                 disabled
                 className="control-btn control-btn-primary"
@@ -545,8 +479,6 @@ function RemoteScreenContent() {
               >
                 Incorrect/Timeout
               </Button>
-            </div>
-            <div className="turn-timer-control">
               <Button
                 onClick={handleStartStopTimer}
                 disabled
@@ -554,9 +486,9 @@ function RemoteScreenContent() {
               >
                 {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
               </Button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </section>
 
       <section className="remote-scores">
