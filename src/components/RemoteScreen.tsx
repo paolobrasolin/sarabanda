@@ -295,6 +295,16 @@ function RemoteScreenContent() {
       timerIntervalRef.current = null;
     }
     const points = getTurnPoints(state);
+    
+    // Track round scores before awarding
+    const roundScores: Record<string, number> = {};
+    if (teamIndex !== null) {
+      const teamName = config.teamNames[teamIndex];
+      if (teamName) {
+        roundScores[teamName] = points;
+      }
+    }
+    
     let newState = awardPoints(state, teamIndex, points);
     // Mark character as used
     if (state.currentCharacter) {
@@ -302,7 +312,7 @@ function RemoteScreenContent() {
       newState = markCharacterUsed(newState, characterId);
     }
     // Complete round and move to next
-    updateState(completeRound(newState));
+    updateState(completeRound(newState, roundScores));
   };
 
   return (
@@ -493,13 +503,47 @@ function RemoteScreenContent() {
 
       <section className="remote-scores">
         <h2>Scores</h2>
-        <div className="teams">
-          {config.teamNames.map((team) => (
-            <div key={team} className="team-score">
-              <span className="team-name">{team}</span>
-              <span className="team-points">{state.scores[team] || 0}</span>
-            </div>
-          ))}
+        <div className="scores-table-container">
+          <table className="scores-table">
+            <thead>
+              <tr>
+                <th>Round</th>
+                <th>Character</th>
+                {config.teamNames.map((team) => (
+                  <th key={team}>{team}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {state.gameHistory.map((roundResult) => (
+                <tr key={roundResult.round}>
+                  <td>{roundResult.round}</td>
+                  <td>
+                    {roundResult.character.given_names} {roundResult.character.family_names}
+                  </td>
+                  {config.teamNames.map((team) => (
+                    <td key={team}>{roundResult.scores[team] || 0}</td>
+                  ))}
+                </tr>
+              ))}
+              {state.gameHistory.length === 0 && (
+                <tr>
+                  <td colSpan={config.teamNames.length + 2} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    No rounds completed yet
+                  </td>
+                </tr>
+              )}
+              {state.gameHistory.length > 0 && (
+                <tr className="scores-totals-row">
+                  <td><strong>Total</strong></td>
+                  <td></td>
+                  {config.teamNames.map((team) => (
+                    <td key={team}><strong>{state.scores[team] || 0}</strong></td>
+                  ))}
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 

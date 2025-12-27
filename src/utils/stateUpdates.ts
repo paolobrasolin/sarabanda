@@ -339,6 +339,16 @@ export function handleCorrectAnswer(state: GameStatus): GameStatus {
   }
 
   const points = getTurnPoints(state);
+  
+  // Track round scores before awarding
+  const roundScores: Record<string, number> = {};
+  if (state.currentTeamIndex !== null) {
+    const teamName = state.config.teamNames[state.currentTeamIndex];
+    if (teamName) {
+      roundScores[teamName] = points;
+    }
+  }
+  
   let newState = awardPoints(state, state.currentTeamIndex, points);
 
   // Mark character as used
@@ -346,7 +356,7 @@ export function handleCorrectAnswer(state: GameStatus): GameStatus {
   newState = markCharacterUsed(newState, characterId);
 
   // End round and move to next
-  return completeRound(newState);
+  return completeRound(newState, roundScores);
 }
 
 /**
@@ -365,8 +375,9 @@ export function handleIncorrectAnswer(state: GameStatus): GameStatus {
 
 /**
  * Completes the current round and moves to the next round's choosing phase.
+ * @param roundScores - Points awarded to each team in this round (before being added to cumulative scores)
  */
-export function completeRound(state: GameStatus): GameStatus {
+export function completeRound(state: GameStatus, roundScores?: Record<string, number>): GameStatus {
   // Stop timer
   let newState: GameStatus = {
     ...state,
@@ -376,9 +387,24 @@ export function completeRound(state: GameStatus): GameStatus {
     currentTeamIndex: null,
     turnType: 'team',
     hintsRevealed: 0,
+    // Ensure phase is preserved (should be 'guessing' at this point)
+    phase: state.phase,
   };
 
+  // Add round result to game history if we have the character and round scores
+  if (state.currentCharacter && state.currentCategory && roundScores) {
+    const roundResult: RoundResult = {
+      round: state.currentRound,
+      category: state.currentCategory,
+      character: state.currentCharacter,
+      scores: roundScores,
+      hintsUsed: state.hintsRevealed,
+    };
+    newState = addRoundResult(newState, roundResult);
+  }
+
   // Move to next round's choosing phase
+  // transitionToChoosing expects phase to be 'guessing' to increment the round
   return transitionToChoosing(newState);
 }
 
