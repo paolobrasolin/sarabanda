@@ -245,7 +245,7 @@ function ConfigDialogContent() {
                 </FormGroup>
 
                 {(config.teamNames || []).map((team, index) => (
-                  <FormGroup key={`team-${team}`}>
+                  <FormGroup key={`team-${index}`}>
                     <FormLabel name={`team-${index}`}>Team {index + 1}</FormLabel>
                     <FormInput
                       name={`team-${index}`}
@@ -282,7 +282,7 @@ function ConfigDialogContent() {
                 {(config.nthTurnDurations || []).map((duration, index) => {
                   const teamName = (config.teamNames || [])[index] || `team-${index}`;
                   return (
-                    <FormGroup key={`duration-${teamName}`}>
+                    <FormGroup key={`duration-${index}`}>
                       <FormLabel name={`turn-duration-${index}`}>Turn {index + 1} Duration</FormLabel>
                       <FormInput
                         name={`turn-duration-${index}`}
@@ -322,7 +322,7 @@ function ConfigDialogContent() {
                 {(config.nthTurnScores || []).map((score, index) => {
                   const teamName = (config.teamNames || [])[index] || `team-${index}`;
                   return (
-                    <FormGroup key={`score-${teamName}`}>
+                    <FormGroup key={`score-${index}`}>
                       <FormLabel name={`turn-score-${index}`}>Turn {index + 1} Score</FormLabel>
                       <FormInput
                         name={`turn-score-${index}`}
