@@ -27,6 +27,10 @@ function PlayerScreenContent() {
           </div>
         </div>
         <div className="player-sidebar">
+          <div className="player-scoreboard"></div>
+          <div className="player-timer">
+            <div className="player-timer-value timer-stopped">--:--</div>
+          </div>
           <div className="player-mascot">
             <img src={mascotImage} alt="Sarabanda Mascot" className="player-mascot-image" />
           </div>
@@ -68,20 +72,18 @@ function PlayerScreenContent() {
       </div>
 
       <div className="player-sidebar">
+        <div className="player-scoreboard">
+          {config.teamNames.map((team) => (
+            <div key={team} className="player-team-score">
+              <span className="player-team-name">{team}</span>
+              <span className="player-team-points">{state.scores[team] || 0}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="player-timer">
           <div className={`player-timer-value ${state.isTimerRunning ? 'timer-running' : 'timer-stopped'}`}>
             {state.isTimerRunning && state.timeRemaining > 0 ? `${state.timeRemaining}s` : '--:--'}
-          </div>
-        </div>
-
-        <div className="player-scoreboard">
-          <div className="player-teams">
-            {config.teamNames.map((team) => (
-              <div key={team} className="player-team-score">
-                <span className="player-team-name">{team}</span>
-                <span className="player-team-points">{state.scores[team] || 0}</span>
-              </div>
-            ))}
           </div>
         </div>
 
