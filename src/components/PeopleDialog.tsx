@@ -195,7 +195,6 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
         <FormProvider>
           <Form>
             <FormGroup>
-              <FormLabel name="sheet-url">Google Sheet URL</FormLabel>
               <div className="url-input-group">
                 <FormInput
                   name="sheet-url"
@@ -212,6 +211,18 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
                 >
                   {isLoading ? 'Loading...' : 'Load'}
                 </Button>
+              </div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                Paste the URL of a <b>public</b> Google Sheets spreadsheet. Need an example? Try the{' '}
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1rWnPIhtC1fst8CVDIdRgIgSnES79qoktpQGyqlp7TGA/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}
+                >
+                  demo spreadsheet
+                </a>
+                .
               </div>
             </FormGroup>
 
