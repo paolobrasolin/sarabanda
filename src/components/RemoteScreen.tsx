@@ -366,7 +366,20 @@ function RemoteScreenContent() {
   return (
     <div className="remote-screen">
       <section className="remote-section remote-status">
-        <h2 className="remote-section-title">Game Manager</h2>
+        <h2 className="remote-section-title">
+          Game Manager
+          <span>
+            {currentPhase === 'prepping'
+              ? 'Prepping'
+              : currentPhase === 'choosing'
+                ? 'Choosing'
+                : currentPhase === 'guessing'
+                  ? 'Guessing'
+                  : currentPhase === 'stopping'
+                    ? 'Stopped'
+                    : 'Unknown'} phase
+          </span>
+        </h2>
         <div className="game-manager-card">
           <div className="game-manager-actions">
             <button
