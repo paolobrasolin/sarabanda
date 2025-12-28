@@ -563,8 +563,8 @@ function RemoteScreenContent() {
                 ? 'Free-for-All'
                 : state.currentTurn > 0
                   ? `Turn ${state.currentTurn}`
-                  : 'No Turn Active'
-              : 'No Turn Active'}
+                  : 'No turn active'
+              : 'No turn active'}
           </span>
         </h2>
         <div className="turn-actions">
