@@ -22,8 +22,8 @@ function PlayerScreenContent() {
       <div className="player-screen">
         <div className="player-main-content">
           <div className="player-status-message">
-            <h2>Waiting for Game Master</h2>
-            <p>Game configuration will appear here once the Game Master starts a game.</p>
+            <h2>PLEASE WAIT</h2>
+            <p>Waiting for the Game Master to start</p>
           </div>
         </div>
         <div className="player-sidebar">
@@ -42,13 +42,13 @@ function PlayerScreenContent() {
       <div className="player-main-content">
         {currentPhase === 'prepping' ? (
           <div className="player-status-message">
-            <h2>Game Setup</h2>
-            <p>The Game Master is configuring the game. Please wait...</p>
+            <h2>PLEASE WAIT</h2>
+            <p>The Game Master is setting up the game</p>
           </div>
         ) : currentPhase === 'choosing' ? (
           <div className="player-status-message">
-            <h2>Game Master is Choosing</h2>
-            <p>The Game Master is selecting the character for this round...</p>
+            <h2>GET READY</h2>
+            <p>The Game Master is choosing the character</p>
           </div>
         ) : currentPhase === 'guessing' && state.currentCharacter ? (
           <div 

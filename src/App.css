@@ -1662,6 +1662,7 @@ body {
   min-height: 0;
   overflow: visible;
   justify-content: flex-start;
+  gap: 0.5rem;
 }
 
 .player-scoreboard h3 {
@@ -1677,6 +1678,7 @@ body {
   justify-content: space-between;
   align-items: center;
   overflow: visible;
+  gap: 0.5rem;
 }
 
 .player-team-name {
@@ -1687,7 +1689,7 @@ body {
 }
 
 .player-team-score.player-team-current {
-  border: 2px solid #007bff;
+  border: 2px solid #000000;
   border-width: 0px 8px;
   margin: 0px -16px;
   padding: 0 8px;
@@ -1697,7 +1699,7 @@ body {
 .player-team-points {
   font-size: 2.75rem;
   font-weight: 800;
-  color: var(--accent-primary);
+  color: #000000;
 }
 
 .player-mascot {
@@ -1720,24 +1722,23 @@ body {
 .player-status-message {
   text-align: center;
   padding: 2rem;
-  background: var(--bg-primary);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  max-width: 600px;
 }
 
 .player-status-message h2 {
   color: var(--text-primary);
   margin: 0 0 1rem 0;
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: 3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .player-status-message p {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.5rem;
   line-height: 1.6;
+  font-weight: 500;
 }
 
 .player-character-display {
