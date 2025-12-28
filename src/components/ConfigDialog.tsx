@@ -60,7 +60,6 @@ function ConfigDialogContent() {
     };
   });
   const [numberOfTeams, setNumberOfTeams] = useState(config.teamNames?.length || 2);
-  const [numberOfRounds, setNumberOfRounds] = useState(config.numberOfRounds);
 
   // Sync team names array when number of teams changes
   useEffect(() => {
@@ -95,19 +94,6 @@ function ConfigDialogContent() {
     });
   }, [numberOfTeams]);
 
-  // Sync numberOfRounds in config when it changes
-  useEffect(() => {
-    setConfig((prev) => {
-      if (prev.numberOfRounds !== numberOfRounds) {
-        return {
-          ...prev,
-          numberOfRounds,
-        };
-      }
-      return prev;
-    });
-  }, [numberOfRounds]);
-
   // Persist config to localStorage on every change
   // Use a ref to track the last saved config to avoid infinite loops
   const lastSavedConfigRef = React.useRef<string | null>(null);
@@ -127,25 +113,6 @@ function ConfigDialogContent() {
       <section className="config-section">
         <FormProvider>
           <Form>
-
-            <div className="game-settings-row">
-              <FormGroup>
-                <FormLabel name="number-of-rounds">Number of Rounds</FormLabel>
-                <FormInput
-                  name="number-of-rounds"
-                  type="number"
-                  min="1"
-                  value={numberOfRounds.toString()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 1;
-                    setNumberOfRounds(Math.max(1, value));
-                  }}
-                />
-              </FormGroup>
-            </div>
-
-            <hr />
-
             <div className="three-column-layout">
               <div className="config-column">
                 <FormGroup>

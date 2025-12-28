@@ -877,13 +877,14 @@ body {
 .turn-actions-right .control-btn {
   width: 150px;
   min-width: 150px;
+  flex-shrink: 0;
   padding: 1rem 1.5rem;
   font-weight: 600;
 }
 
 .turn-actions-right .select-button {
-  width: 300px;
-  min-width: 300px;
+  flex: 1;
+  min-width: 0;
   padding: 1rem 1rem;
   font-weight: 600;
 }
