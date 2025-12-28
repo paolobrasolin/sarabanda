@@ -7,7 +7,6 @@ import {
   Form,
   FormGroup,
   FormInput,
-  FormLabel,
   FormProvider,
 } from '@ariakit/react';
 import React, { useEffect, useState } from 'react';
@@ -140,7 +139,7 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
           difficulties,
         });
 
-        // Update config with URL only
+        // Update config with URL and reset selected categories/difficulties to all available
         const configString = localStorage.getItem(STORAGE_KEYS.CONFIG);
         if (configString) {
           try {
@@ -148,6 +147,8 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
             updateConfigStorage({
               ...config,
               googleSheetUrl,
+              selectedCategories: categories,
+              selectedDifficulties: difficulties,
             });
           } catch {
             // Ignore parse errors
@@ -169,7 +170,7 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
 
   const handleResetUsedCharacters = () => {
     if (!gameStatus) return;
-    
+
     if (window.confirm('Are you sure you want to reset all used characters? This will mark all characters as available again.')) {
       updateGameStatus({
         ...gameStatus,
