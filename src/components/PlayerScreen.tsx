@@ -28,9 +28,7 @@ function PlayerScreenContent() {
         </div>
         <div className="player-sidebar">
           <div className="player-scoreboard"></div>
-          <div className="player-timer">
-            <div className="player-timer-value timer-stopped">--:--</div>
-          </div>
+          <div className="player-timer"></div>
           <div className="player-mascot">
             <img src={mascotImage} alt="Sarabanda Mascot" className="player-mascot-image" />
           </div>
@@ -53,15 +51,15 @@ function PlayerScreenContent() {
             <p>The Game Master is selecting the character for this round...</p>
           </div>
         ) : currentPhase === 'guessing' && state.currentCharacter ? (
-          <div className="player-character-display">
+          <div 
+            className="player-character-display"
+            style={{ '--character-image-url': `url(${state.currentCharacter.image_url})` } as React.CSSProperties}
+          >
             <img
               src={state.currentCharacter.image_url}
               alt={`${state.currentCharacter.given_names} ${state.currentCharacter.family_names}`}
               className="player-character-image"
             />
-            {state.currentCategory && (
-              <div className="player-category-badge">{state.currentCategory}</div>
-            )}
           </div>
         ) : (
           <div className="player-status-message">
@@ -89,9 +87,11 @@ function PlayerScreenContent() {
         </div>
 
         <div className="player-timer">
-          <div className={`player-timer-value ${state.isTimerRunning ? 'timer-running' : 'timer-stopped'}`}>
-            {state.isTimerRunning && state.timeRemaining > 0 ? `${state.timeRemaining}s` : '--:--'}
-          </div>
+          {state.isTimerRunning && state.timeRemaining > 0 && (
+            <div className="player-timer-value timer-running">
+              {state.timeRemaining}s
+            </div>
+          )}
         </div>
 
         <div className="player-mascot">
