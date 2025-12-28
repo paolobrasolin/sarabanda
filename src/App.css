@@ -1655,16 +1655,16 @@ body {
 .player-timer-value {
   font-size: 4rem;
   font-weight: 900;
-  color: #000000;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .player-timer-value.timer-running {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .player-timer-value.timer-stopped {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .player-scoreboard {
@@ -1701,7 +1701,7 @@ body {
 }
 
 .player-team-score.player-team-current {
-  border: 2px solid #000000;
+  border: 2px solid var(--text-primary);
   border-width: 0px 8px;
   margin: 0px -16px;
   padding: 0 8px;
@@ -1711,7 +1711,7 @@ body {
 .player-team-points {
   font-size: 2.75rem;
   font-weight: 800;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .player-mascot {
