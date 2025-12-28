@@ -42,7 +42,7 @@ function ConfigDialogContent() {
     } catch {
       // Fall through to default
     }
-    const initialConfig = gameStatus?.config || initialGameConfig;
+    const initialConfig = initialGameConfig;
     const teamCount = initialConfig.teamNames?.length || 2;
     const nthTurnDurations = Array.isArray(initialConfig.nthTurnDurations) ? initialConfig.nthTurnDurations : [];
     const nthTurnScores = Array.isArray(initialConfig.nthTurnScores) ? initialConfig.nthTurnScores : [];

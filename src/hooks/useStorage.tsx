@@ -68,9 +68,44 @@ export function StorageProvider<T>({
     return defaultValue;
   });
 
-  // Load from localStorage on mount (in case it was set before component mounted)
-  // This only runs once on mount, initial state already loaded the value
-  // So we don't need to do anything here - the initial useState already handled it
+  // Initialize localStorage with defaultValue if key doesn't exist or is invalid
+  // This ensures storage is always initialized, even on first load
+  useEffect(() => {
+    if (readOnly || defaultValue === null) {
+      // Don't initialize read-only storage or when defaultValue is null
+      return;
+    }
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      let needsInitialization = false;
+
+      if (!saved) {
+        // Key doesn't exist - needs initialization
+        needsInitialization = true;
+      } else {
+        // Key exists - verify it's valid JSON
+        try {
+          deserialize(saved);
+          // Valid - no initialization needed
+        } catch {
+          // Invalid/corrupted data - needs re-initialization
+          console.warn(`Corrupted data in ${storageKey}, re-initializing with default value`);
+          needsInitialization = true;
+        }
+      }
+
+      if (needsInitialization) {
+        // Initialize with default value
+        const defaultValueString = serialize(defaultValue);
+        localStorage.setItem(storageKey, defaultValueString);
+        // Update state to match (though it should already be defaultValue)
+        setValue(defaultValue);
+      }
+    } catch (error) {
+      console.error(`Failed to initialize ${storageKey} in localStorage:`, error);
+    }
+  }, [storageKey, defaultValue, readOnly, serialize, deserialize]);
 
   // Listen to storage events (cross-tab updates)
   useEffect(() => {

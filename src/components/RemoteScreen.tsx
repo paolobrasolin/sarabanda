@@ -844,24 +844,6 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      {currentPhase === 'prepping' && state.characters.length === 0 && (
-        <section className="remote-section remote-warning">
-          <p>
-            <strong>No characters loaded.</strong> Please click "People" to load characters from a Google Sheet.
-          </p>
-        </section>
-      )}
-
-      {currentPhase === 'prepping' &&
-        (config.selectedDifficulties.length === 0 || config.selectedCategories.length === 0) && (
-          <section className="remote-section remote-warning">
-            <p>
-              <strong>Configuration incomplete.</strong> Please select at least one difficulty and one category in the
-              Config screen.
-            </p>
-          </section>
-        )}
-
       <ConfigModal
         open={isConfigModalOpen}
         onClose={() => {
