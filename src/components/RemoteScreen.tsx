@@ -1,4 +1,13 @@
-import { Button } from '@ariakit/react';
+import {
+  Button,
+  Select,
+  SelectArrow,
+  SelectItem,
+  SelectItemCheck,
+  SelectLabel,
+  SelectPopover,
+  SelectProvider,
+} from '@ariakit/react';
 import { useEffect, useRef, useState } from 'react';
 import { ConfigModal } from './ConfigDialog';
 import { PeopleDialog } from './PeopleDialog';
@@ -34,7 +43,7 @@ import { STORAGE_KEYS } from '../utils/storageKeys';
  */
 function RemoteScreenContent() {
   const { value: state, update: updateState } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
-  const { value: config } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
+  const { value: config, update: updateConfig } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { value: savedPeople } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
   const timerIntervalRef = useRef<number | null>(null);
   const stateRef = useRef(state);
@@ -408,11 +417,20 @@ function RemoteScreenContent() {
           </span>
         </h2>
         <div className="character-preview-card">
-          <div className="character-preview-image">
+          <div
+            className="character-preview-image"
+            style={
+              state.currentCharacter
+                ? ({ '--character-image-url': `url(${state.currentCharacter.image_url})` } as React.CSSProperties)
+                : undefined
+            }
+          >
             {state.currentCharacter ? (
-              <img
-                src={state.currentCharacter.image_url}
-                alt={`${state.currentCharacter.given_names} ${state.currentCharacter.family_names}`}
+              <div
+                className="character-preview-image-content"
+                style={{ backgroundImage: `url(${state.currentCharacter.image_url})` }}
+                role="img"
+                aria-label={`${state.currentCharacter.given_names} ${state.currentCharacter.family_names}`}
               />
             ) : (
               <div className="character-preview-placeholder">No character selected</div>
@@ -439,20 +457,90 @@ function RemoteScreenContent() {
             </dl>
           </div>
           <div className="character-preview-actions">
-            <Button
-              onClick={handleConfirmCharacter}
-              className="control-btn control-btn-primary"
-              disabled={currentPhase !== 'choosing' || !state.currentCharacter}
-            >
-              Confirm
-            </Button>
-            <Button
-              onClick={handleRerollCharacter}
-              className="control-btn"
-              disabled={currentPhase !== 'choosing' || !state.currentCharacter}
-            >
-              Re-roll
-            </Button>
+            {(() => {
+              const chars = savedPeople || state.characters || [];
+              const availableCategories = chars.length > 0 ? [...new Set(chars.map((c) => c.category))].sort() : [];
+              const availableDifficulties = chars.length > 0 ? [...new Set(chars.map((c) => c.difficulty))].sort() : [];
+              
+              return (
+                <>
+                  <div style={{ width: '100%' }}>
+                    <SelectProvider
+                      value={config.selectedDifficulties || []}
+                      setValue={(value) => {
+                        if (!config) return;
+                        updateConfig({
+                          ...config,
+                          selectedDifficulties: Array.isArray(value) ? value.sort() : config.selectedDifficulties || [],
+                        });
+                      }}
+                    >
+                      <SelectLabel>Difficulties</SelectLabel>
+                      <Select className="select-button" required>
+                        {!config.selectedDifficulties || config.selectedDifficulties.length === 0
+                          ? 'No selection'
+                          : config.selectedDifficulties.length === 1
+                            ? config.selectedDifficulties[0]
+                            : `${config.selectedDifficulties.length} selected`}
+                        <SelectArrow />
+                      </Select>
+                      <SelectPopover gutter={4} sameWidth className="select-popover">
+                        {availableDifficulties.map((difficulty) => (
+                          <SelectItem key={difficulty} value={difficulty} className="select-item">
+                            <SelectItemCheck />
+                            {difficulty}
+                          </SelectItem>
+                        ))}
+                      </SelectPopover>
+                    </SelectProvider>
+                  </div>
+                  <div style={{ width: '100%' }}>
+                    <SelectProvider
+                      value={config.selectedCategories || []}
+                      setValue={(value) => {
+                        if (!config) return;
+                        updateConfig({
+                          ...config,
+                          selectedCategories: Array.isArray(value) ? value.sort() : config.selectedCategories || [],
+                        });
+                      }}
+                    >
+                      <SelectLabel>Categories</SelectLabel>
+                      <Select className="select-button">
+                        {!config.selectedCategories || config.selectedCategories.length === 0
+                          ? 'No selection'
+                          : config.selectedCategories.length === 1
+                            ? config.selectedCategories[0]
+                            : `${config.selectedCategories.length} selected`}
+                        <SelectArrow />
+                      </Select>
+                      <SelectPopover gutter={4} sameWidth className="select-popover">
+                        {availableCategories.map((category) => (
+                          <SelectItem key={category} value={category} className="select-item">
+                            <SelectItemCheck />
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectPopover>
+                    </SelectProvider>
+                  </div>
+                  <Button
+                    onClick={handleRerollCharacter}
+                    className="control-btn"
+                    disabled={currentPhase !== 'choosing' || !state.currentCharacter}
+                  >
+                    Re-roll
+                  </Button>
+                  <Button
+                    onClick={handleConfirmCharacter}
+                    className="control-btn control-btn-primary"
+                    disabled={currentPhase !== 'choosing' || !state.currentCharacter}
+                  >
+                    Confirm
+                  </Button>
+                </>
+              );
+            })()}
           </div>
         </div>
       </section>
@@ -622,7 +710,7 @@ function RemoteScreenContent() {
 
 export function RemoteScreen() {
   return (
-    <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={true} defaultValue={initialGameConfig}>
+    <StorageProvider<GameConfig> storageKey={STORAGE_KEYS.CONFIG} readOnly={false} defaultValue={initialGameConfig}>
       <StorageProvider<GameStatus> storageKey={STORAGE_KEYS.STATUS} readOnly={false} defaultValue={initialGameStatus}>
         <StorageProvider<Character[]> storageKey={STORAGE_KEYS.PEOPLE} readOnly={true} defaultValue={null}>
           <RemoteScreenContent />

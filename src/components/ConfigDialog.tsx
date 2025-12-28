@@ -8,13 +8,6 @@ import {
   FormInput,
   FormLabel,
   FormProvider,
-  Select,
-  SelectArrow,
-  SelectItem,
-  SelectItemCheck,
-  SelectLabel,
-  SelectPopover,
-  SelectProvider,
 } from '@ariakit/react';
 import React, { useEffect, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
@@ -23,23 +16,8 @@ import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 function ConfigDialogContent() {
-  const { value: gameStatus } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
   const { update: updateConfigStorage } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
-  const { value: loadedCharacters } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
 
-  // Compute available categories and difficulties from loaded characters
-  const validationStatus = React.useMemo(() => {
-    const chars = loadedCharacters || gameStatus?.characters || [];
-    if (chars.length === 0) return null;
-    const categories = [...new Set(chars.map((c) => c.category))].sort();
-    const difficulties = [...new Set(chars.map((c) => c.difficulty))].sort();
-    return {
-      isValid: true,
-      characterCount: chars.length,
-      categories,
-      difficulties,
-    };
-  }, [loadedCharacters, gameStatus?.characters]);
   const [config, setConfig] = useState<GameConfig>(() => {
     // Try to load from localStorage directly first, then fallback
     try {
@@ -163,66 +141,6 @@ function ConfigDialogContent() {
                     setNumberOfRounds(Math.max(1, value));
                   }}
                 />
-              </FormGroup>
-
-              <FormGroup>
-                <SelectProvider
-                  value={config.selectedDifficulties || []}
-                  setValue={(value) => {
-                    setConfig((prev) => ({
-                      ...prev,
-                      selectedDifficulties: Array.isArray(value) ? value.sort() : prev.selectedDifficulties || [],
-                    }));
-                  }}
-                >
-                  <SelectLabel>Difficulties</SelectLabel>
-                  <Select className="select-button" required>
-                    {!config.selectedDifficulties || config.selectedDifficulties.length === 0
-                      ? 'No selection'
-                      : config.selectedDifficulties.length === 1
-                        ? config.selectedDifficulties[0]
-                        : `${config.selectedDifficulties.length} selected`}
-                    <SelectArrow />
-                  </Select>
-                  <SelectPopover gutter={4} sameWidth className="select-popover">
-                    {validationStatus?.difficulties?.map((difficulty) => (
-                      <SelectItem key={difficulty} value={difficulty} className="select-item">
-                        <SelectItemCheck />
-                        {difficulty}
-                      </SelectItem>
-                    )) || []}
-                  </SelectPopover>
-                </SelectProvider>
-              </FormGroup>
-
-              <FormGroup>
-                <SelectProvider
-                  value={config.selectedCategories || []}
-                  setValue={(value) => {
-                    setConfig((prev) => ({
-                      ...prev,
-                      selectedCategories: Array.isArray(value) ? value.sort() : prev.selectedCategories || [],
-                    }));
-                  }}
-                >
-                  <SelectLabel>Categories</SelectLabel>
-                  <Select className="select-button">
-                    {!config.selectedCategories || config.selectedCategories.length === 0
-                      ? 'No selection'
-                      : config.selectedCategories.length === 1
-                        ? config.selectedCategories[0]
-                        : `${config.selectedCategories.length} selected`}
-                    <SelectArrow />
-                  </Select>
-                  <SelectPopover gutter={4} sameWidth className="select-popover">
-                    {validationStatus?.categories?.map((category) => (
-                      <SelectItem key={category} value={category} className="select-item">
-                        <SelectItemCheck />
-                        {category}
-                      </SelectItem>
-                    )) || []}
-                  </SelectPopover>
-                </SelectProvider>
               </FormGroup>
             </div>
 
