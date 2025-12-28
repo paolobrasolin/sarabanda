@@ -1,6 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameStatus } from '../types';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
+import { calculateTimeRemaining } from '../utils/stateUpdates';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 import mascotImage from '../assets/mascot.png';
 
@@ -12,9 +14,46 @@ import mascotImage from '../assets/mascot.png';
 function PlayerScreenContent() {
   const { value: state } = useStorage<GameStatus>(STORAGE_KEYS.STATUS);
   const { value: config } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
+  const [displayTimeRemaining, setDisplayTimeRemaining] = useState(0);
+  const stateRef = useRef(state);
 
   // Ensure phase is always set (fallback for migration)
   const currentPhase = state?.phase || 'prepping';
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Calculate and update displayed time remaining based on timestamp
+  useEffect(() => {
+    if (!state) {
+      setDisplayTimeRemaining(0);
+      return;
+    }
+
+    // Calculate remaining time from timestamp
+    const remaining = calculateTimeRemaining(state);
+    setDisplayTimeRemaining(remaining);
+
+    // Update display every 100ms for smooth countdown
+    if (state.isTimerRunning && state.timerEndsAt) {
+      const interval = setInterval(() => {
+        // Use ref to get latest state (avoids stale closure)
+        const currentState = stateRef.current;
+        if (currentState && currentState.isTimerRunning && currentState.timerEndsAt) {
+          const newRemaining = calculateTimeRemaining(currentState);
+          setDisplayTimeRemaining(newRemaining);
+        } else {
+          setDisplayTimeRemaining(0);
+        }
+      }, 100);
+
+      return () => clearInterval(interval);
+    } else {
+      setDisplayTimeRemaining(0);
+    }
+  }, [state]);
 
   // Show loading/empty state if no game state is available
   if (!state || !config) {
@@ -51,7 +90,7 @@ function PlayerScreenContent() {
             <p>The Game Master is choosing the character</p>
           </div>
         ) : currentPhase === 'guessing' && state.currentCharacter ? (
-          <div 
+          <div
             className="player-character-display"
             style={{ '--character-image-url': `url(${state.currentCharacter.image_url})` } as React.CSSProperties}
           >
@@ -72,11 +111,11 @@ function PlayerScreenContent() {
       <div className="player-sidebar">
         <div className="player-scoreboard">
           {config.teamNames.map((team, index) => {
-            const isCurrentTeam = state.turnType === 'free-for-all' || 
+            const isCurrentTeam = state.turnType === 'free-for-all' ||
               (state.turnType === 'team' && state.currentTeamIndex === index);
             return (
-              <div 
-                key={team} 
+              <div
+                key={team}
                 className={`player-team-score ${isCurrentTeam ? 'player-team-current' : ''}`}
               >
                 <span className="player-team-name">{team}</span>
@@ -86,10 +125,10 @@ function PlayerScreenContent() {
           })}
         </div>
 
-        <div className="player-timer">
-          {state.isTimerRunning && state.timeRemaining > 0 && (
+        <div className={`player-timer ${state.isTimerRunning && displayTimeRemaining > 0 ? 'timer-active' : ''}`}>
+          {state.isTimerRunning && displayTimeRemaining > 0 && (
             <div className="player-timer-value timer-running">
-              {state.timeRemaining}s
+              {displayTimeRemaining}
             </div>
           )}
         </div>

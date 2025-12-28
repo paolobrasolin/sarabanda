@@ -145,6 +145,8 @@ export function endGame(state: GameStatus): GameStatus {
     phase: 'prepping',
     isGameActive: false,
     isTimerRunning: false,
+    timeRemaining: 0,
+    timerEndsAt: null,
     currentCharacter: null,
     currentCategory: null,
     currentTurn: 0,
@@ -184,11 +186,62 @@ export function markCharacterUsed(state: GameStatus, characterId: string): GameS
   return state;
 }
 
+/**
+ * Calculates the remaining time based on timer end timestamp.
+ * Returns 0 if timer is not running or has expired.
+ */
+export function calculateTimeRemaining(state: GameStatus): number {
+  if (!state.isTimerRunning || !state.timerEndsAt) {
+    return 0;
+  }
+  const remaining = Math.floor((state.timerEndsAt - Date.now()) / 1000);
+  return Math.max(0, remaining);
+}
+
+/**
+ * Starts the timer with a given duration.
+ */
+export function startTimer(state: GameStatus, duration: number): GameStatus {
+  return {
+    ...state,
+    isTimerRunning: true,
+    timerEndsAt: Date.now() + duration * 1000,
+    timeRemaining: duration, // Initial value, will be calculated dynamically
+  };
+}
+
+/**
+ * Stops the timer.
+ */
+export function stopTimer(state: GameStatus): GameStatus {
+  return {
+    ...state,
+    isTimerRunning: false,
+    timerEndsAt: null,
+    timeRemaining: 0,
+  };
+}
+
 export function setTimerRunning(state: GameStatus, running: boolean): GameStatus {
-  return { ...state, isTimerRunning: running };
+  if (running) {
+    // If starting timer, get the duration for current turn
+    const duration = getTurnDuration(state);
+    return startTimer(state, duration);
+  } else {
+    return stopTimer(state);
+  }
 }
 
 export function setTimeRemaining(state: GameStatus, time: number): GameStatus {
+  // This is kept for backward compatibility, but timeRemaining should be calculated dynamically
+  // If timer is running, we update the end time to reflect the new remaining time
+  if (state.isTimerRunning && state.timerEndsAt) {
+    return {
+      ...state,
+      timerEndsAt: Date.now() + time * 1000,
+      timeRemaining: time,
+    };
+  }
   return { ...state, timeRemaining: time };
 }
 
@@ -218,6 +271,7 @@ export function transitionToPrepping(state: GameStatus): GameStatus {
     isGameActive: false,
     isTimerRunning: false,
     timeRemaining: 0,
+    timerEndsAt: null,
     hintsRevealed: 0,
     currentTurn: 0,
     currentTeamIndex: null,
@@ -241,6 +295,7 @@ export function startTurn(
     turnType,
     isTimerRunning: false,
     timeRemaining: 0,
+    timerEndsAt: null,
   };
 }
 
@@ -383,6 +438,7 @@ export function completeRound(state: GameStatus, roundScores?: Record<string, nu
     ...state,
     isTimerRunning: false,
     timeRemaining: 0,
+    timerEndsAt: null,
     currentTurn: 0,
     currentTeamIndex: null,
     turnType: 'team',

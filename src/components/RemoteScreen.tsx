@@ -7,6 +7,7 @@ import type { Character, GameConfig, GameStatus } from '../types';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import {
   awardPoints,
+  calculateTimeRemaining,
   completeRound,
   endGame,
   getTurnDuration,
@@ -15,9 +16,10 @@ import {
   handleIncorrectAnswer,
   markCharacterUsed,
   rerollCharacter,
-  setTimeRemaining,
   setTimerRunning,
   startGame,
+  startTimer,
+  stopTimer,
   transitionToGuessing,
   updateCharacters,
 } from '../utils/stateUpdates';
@@ -34,34 +36,47 @@ function RemoteScreenContent() {
   const { value: config } = useStorage<GameConfig>(STORAGE_KEYS.CONFIG);
   const { value: savedPeople } = useStorage<Character[]>(STORAGE_KEYS.PEOPLE);
   const timerIntervalRef = useRef<number | null>(null);
-  const timeRemainingRef = useRef(state?.timeRemaining ?? 0);
   const stateRef = useRef(state);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isPeopleDialogOpen, setIsPeopleDialogOpen] = useState(false);
 
   // Migrate old state format: ensure phase exists and migrate old phases
   useEffect(() => {
-    if (state && (!('phase' in state) || (state as any).phase === 'setup' || (state as any).phase === 'ready')) {
-      const oldPhase = (state as any).phase;
-      let newPhase: 'prepping' | 'choosing' | 'guessing' = 'prepping';
-      
-      // Migrate old phases
-      if (oldPhase === 'ready') {
-        // If we were in ready, we should go back to prepping since we removed that phase
-        newPhase = 'prepping';
-      } else if (oldPhase === 'setup') {
-        newPhase = 'prepping';
+    if (state) {
+      let needsMigration = false;
+      const migratedState: any = { ...state };
+
+      // Migrate phase
+      if (!('phase' in state) || (state as any).phase === 'setup' || (state as any).phase === 'ready') {
+        needsMigration = true;
+        const oldPhase = (state as any).phase;
+        let newPhase: 'prepping' | 'choosing' | 'guessing' = 'prepping';
+        
+        // Migrate old phases
+        if (oldPhase === 'ready') {
+          // If we were in ready, we should go back to prepping since we removed that phase
+          newPhase = 'prepping';
+        } else if (oldPhase === 'setup') {
+          newPhase = 'prepping';
+        }
+        migratedState.phase = newPhase;
       }
 
-      const migratedState = {
-        ...state,
-        phase: newPhase,
-      };
+      // Migrate timer fields (add if missing)
+      if (!('timerEndsAt' in state)) {
+        needsMigration = true;
+        migratedState.timerEndsAt = null;
+      }
+
       // Remove gameCharacters if it exists (we don't use it anymore)
       if ('gameCharacters' in migratedState) {
-        delete (migratedState as any).gameCharacters;
+        needsMigration = true;
+        delete migratedState.gameCharacters;
       }
-      updateState(migratedState);
+
+      if (needsMigration) {
+        updateState(migratedState as GameStatus);
+      }
     }
   }, [state, updateState]);
 
@@ -99,43 +114,51 @@ function RemoteScreenContent() {
   // Keep refs in sync with state
   useEffect(() => {
     if (state) {
-      timeRemainingRef.current = state.timeRemaining;
       stateRef.current = state;
     }
   }, [state]);
 
-  // Timer countdown effect
+  // Timer countdown effect - updates displayed timeRemaining based on timestamp
   useEffect(() => {
     if (!state) return;
 
-    if (state.isTimerRunning && state.timeRemaining > 0) {
+    if (state.isTimerRunning && state.timerEndsAt) {
       // Clear any existing interval first
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
 
+      // Update the displayed timeRemaining every 100ms for smooth countdown
       timerIntervalRef.current = window.setInterval(() => {
         const currentState = stateRef.current;
-        if (!currentState) return;
-
-        const newTime = timeRemainingRef.current - 1;
-        if (newTime <= 0) {
-          // Timer reached 0, stop it
-          let newState = setTimerRunning(currentState, false);
-          newState = setTimeRemaining(newState, 0);
-          updateState(newState);
-        } else {
-          updateState(setTimeRemaining(currentState, newTime));
+        if (!currentState || !currentState.isTimerRunning || !currentState.timerEndsAt) {
+          return;
         }
-      }, 1000);
+
+        const remaining = calculateTimeRemaining(currentState);
+        
+        // Update state with calculated remaining time (for display)
+        if (remaining !== currentState.timeRemaining) {
+          updateState({
+            ...currentState,
+            timeRemaining: remaining,
+          });
+        }
+
+        // If timer expired, stop it
+        if (remaining <= 0) {
+          updateState(stopTimer(currentState));
+        }
+      }, 100); // Update every 100ms for smooth countdown
     } else {
-      // Stop timer if not running or time is 0
+      // Stop timer if not running
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
-      if (state.timeRemaining === 0 && state.isTimerRunning) {
-        updateState(setTimerRunning(state, false));
+      // Ensure timer is stopped if it should be
+      if (state.isTimerRunning && !state.timerEndsAt) {
+        updateState(stopTimer(state));
       }
     }
 
@@ -234,10 +257,7 @@ function RemoteScreenContent() {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
-      let newState = endGame(state);
-      newState = setTimerRunning(newState, false);
-      newState = setTimeRemaining(newState, 0);
-      updateState(newState);
+      updateState(endGame(state));
     }
   };
 
@@ -248,16 +268,11 @@ function RemoteScreenContent() {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
-      updateState(setTimerRunning(state, false));
+      updateState(stopTimer(state));
     } else {
       // Start timer
-      let newState = state;
-      if (state.timeRemaining === 0) {
-        // Initialize timer to the appropriate duration for current turn
-        const duration = getTurnDuration(state);
-        newState = setTimeRemaining(newState, duration);
-      }
-      updateState(setTimerRunning(newState, true));
+      const duration = getTurnDuration(state);
+      updateState(startTimer(state, duration));
     }
   };
 
@@ -270,7 +285,8 @@ function RemoteScreenContent() {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
-    updateState(handleCorrectAnswer(state));
+    let newState = stopTimer(state);
+    updateState(handleCorrectAnswer(newState));
   };
 
   const onIncorrectAnswer = () => {
@@ -282,7 +298,8 @@ function RemoteScreenContent() {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
-    updateState(handleIncorrectAnswer(state));
+    let newState = stopTimer(state);
+    updateState(handleIncorrectAnswer(newState));
   };
 
   const handleAwardFreeForAll = (teamIndex: number | null) => {
@@ -305,7 +322,8 @@ function RemoteScreenContent() {
       }
     }
     
-    let newState = awardPoints(state, teamIndex, points);
+    let newState = stopTimer(state);
+    newState = awardPoints(newState, teamIndex, points);
     // Mark character as used
     if (state.currentCharacter) {
       const characterId = createCharacterId(state.currentCharacter);

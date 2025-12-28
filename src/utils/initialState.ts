@@ -25,6 +25,7 @@ export const initialGameStatus: GameStatus = {
   isGameActive: false,
   isTimerRunning: false,
   timeRemaining: 0,
+  timerEndsAt: null,
   hintsRevealed: 0,
   currentTurn: 0,
   currentTeamIndex: null,

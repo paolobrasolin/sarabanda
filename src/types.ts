@@ -40,6 +40,7 @@ export interface GameStatus {
   isGameActive: boolean;
   isTimerRunning: boolean;
   timeRemaining: number;
+  timerEndsAt: number | null; // Timestamp (ms) when timer will end, null if timer is off
   hintsRevealed: number;
   currentTurn: number;
   currentTeamIndex: number | null;

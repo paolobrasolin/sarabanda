@@ -1625,12 +1625,24 @@ body {
   gap: 1rem;
 }
 
+@keyframes tilt-n-move-shaking {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(5px, 5px) rotate(5deg); }
+  50% { transform: translate(0, 0) rotate(0deg); }
+  65% { transform: translate(-5px, 5px) rotate(-5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
 .player-timer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.player-timer.timer-active {
+  animation: tilt-n-move-shaking 2s infinite;
 }
 
 .player-timer h3 {
