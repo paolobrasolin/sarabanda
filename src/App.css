@@ -256,6 +256,18 @@ body {
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
+.select-button:disabled {
+  cursor: not-allowed;
+  background: rgba(248, 249, 250, 0.6);
+  border-color: rgba(222, 226, 230, 0.6);
+  color: var(--text-primary);
+}
+
+.select-button:disabled:hover {
+  border-color: rgba(222, 226, 230, 0.6);
+  background: rgba(248, 249, 250, 0.6);
+}
+
 .select-popover {
   background: var(--bg-primary);
   border: 2px solid var(--border);

@@ -561,43 +561,67 @@ function RemoteScreenContent() {
             {currentPhase === 'guessing' 
               ? state.turnType === 'free-for-all'
                 ? 'Free-for-All'
-                : state.currentTeamIndex !== null
-                  ? config.teamNames[state.currentTeamIndex]
+                : state.currentTurn > 0
+                  ? `Turn ${state.currentTurn}`
                   : 'No Turn Active'
               : 'No Turn Active'}
           </span>
         </h2>
         <div className="turn-actions">
+          <Button
+            onClick={handleStartStopTimer}
+            disabled={currentPhase !== 'guessing'}
+            className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
+          >
+            {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
+          </Button>
+          <SelectProvider
+            value={
+              currentPhase === 'guessing' && state.turnType === 'free-for-all'
+                ? selectedTeamForAward || ''
+                : currentPhase === 'guessing' && state.currentTeamIndex !== null
+                  ? config.teamNames[state.currentTeamIndex]
+                  : ''
+            }
+            setValue={
+              currentPhase === 'guessing' && state.turnType === 'free-for-all'
+                ? (value) => setSelectedTeamForAward(value || null)
+                : () => {} // No-op when not in free-for-all or not guessing
+            }
+          >
+            <Select
+              className="select-button"
+              disabled={currentPhase !== 'guessing' || state.turnType !== 'free-for-all'}
+            >
+              <span className="select-button-text">
+                {currentPhase === 'guessing' ? (
+                  state.turnType === 'free-for-all' ? (
+                    selectedTeamForAward === null || selectedTeamForAward === ''
+                      ? 'Select team...'
+                      : selectedTeamForAward
+                  ) : (
+                    state.currentTeamIndex !== null
+                      ? config.teamNames[state.currentTeamIndex]
+                      : 'No team selected'
+                  )
+                ) : (
+                  'No turn active'
+                )}
+              </span>
+              <SelectArrow />
+            </Select>
+            <SelectPopover gutter={4} sameWidth className="select-popover">
+              {config.teamNames.map((team) => (
+                <SelectItem key={team} value={team} className="select-item">
+                  <SelectItemCheck />
+                  {team}
+                </SelectItem>
+              ))}
+            </SelectPopover>
+          </SelectProvider>
           {currentPhase === 'guessing' ? (
             state.turnType === 'free-for-all' ? (
               <>
-                <Button
-                  onClick={handleStartStopTimer}
-                  className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
-                >
-                  {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
-                </Button>
-                <SelectProvider
-                  value={selectedTeamForAward || ''}
-                  setValue={(value) => setSelectedTeamForAward(value || null)}
-                >
-                  <Select className="select-button">
-                    <span className="select-button-text">
-                      {selectedTeamForAward === null || selectedTeamForAward === ''
-                        ? 'Select team...'
-                        : selectedTeamForAward}
-                    </span>
-                    <SelectArrow />
-                  </Select>
-                  <SelectPopover gutter={4} sameWidth className="select-popover">
-                    {config.teamNames.map((team) => (
-                      <SelectItem key={team} value={team} className="select-item">
-                        <SelectItemCheck />
-                        {team}
-                      </SelectItem>
-                    ))}
-                  </SelectPopover>
-                </SelectProvider>
                 <Button
                   onClick={() => {
                     if (selectedTeamForAward === null || selectedTeamForAward === '') return;
@@ -620,12 +644,6 @@ function RemoteScreenContent() {
             ) : (
               <>
                 <Button
-                  onClick={handleStartStopTimer}
-                  className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
-                >
-                  {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
-                </Button>
-                <Button
                   onClick={onCorrectAnswer}
                   className="control-btn control-btn-primary"
                 >
@@ -641,13 +659,6 @@ function RemoteScreenContent() {
             )
           ) : (
             <>
-              <Button
-                onClick={handleStartStopTimer}
-                disabled
-                className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
-              >
-                {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
-              </Button>
               <Button
                 disabled
                 className="control-btn control-btn-primary"
