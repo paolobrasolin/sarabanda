@@ -4,7 +4,6 @@ export interface Character {
   category: string;
   difficulty: string;
   image_url: string;
-  hints: string[];
 }
 
 export interface GameConfig {

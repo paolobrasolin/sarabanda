@@ -73,7 +73,7 @@ function parseCsvToCharacters(csvText: string): Character[] {
 
   if (!headerMap.hasRequiredColumns()) {
     throw new Error(
-      'Missing required columns. Please ensure your sheet has: family_names, given_names, category, difficulty, image_url, hints',
+      'Missing required columns. Please ensure your sheet has: family_names, given_names, category, difficulty, image_url',
     );
   }
 
@@ -130,7 +130,6 @@ interface HeaderMap {
   category: number;
   difficulty: number;
   image_url: number;
-  hints: number;
   hasRequiredColumns(): boolean;
 }
 
@@ -158,9 +157,6 @@ function createHeaderMap(headers: string[]): HeaderMap {
       case 'image url':
         map.image_url = index;
         break;
-      case 'hints':
-        map.hints = index;
-        break;
     }
   });
 
@@ -172,8 +168,7 @@ function createHeaderMap(headers: string[]): HeaderMap {
         map.given_names !== undefined &&
         map.category !== undefined &&
         map.difficulty !== undefined &&
-        map.image_url !== undefined &&
-        map.hints !== undefined
+        map.image_url !== undefined
       );
     },
   } as HeaderMap;
@@ -186,18 +181,11 @@ function parseCharacterFromValues(values: string[], headerMap: HeaderMap): Chara
     const category = values[headerMap.category]?.trim() || '';
     const difficulty = values[headerMap.difficulty]?.trim() || '';
     const imageUrl = values[headerMap.image_url]?.trim() || '';
-    const hintsStr = values[headerMap.hints]?.trim() || '';
 
     // Skip empty rows
     if (!familyNames && !givenNames) {
       return null;
     }
-
-    // Parse hints (split by colons)
-    const hints = hintsStr
-      .split(':')
-      .map((hint) => hint.trim())
-      .filter((hint) => hint.length > 0);
 
     return {
       family_names: familyNames,
@@ -205,7 +193,6 @@ function parseCharacterFromValues(values: string[], headerMap: HeaderMap): Chara
       category: category || 'Uncategorized',
       difficulty: difficulty,
       image_url: imageUrl,
-      hints: hints.length > 0 ? hints : ['No hints available'],
     };
   } catch (error) {
     throw new Error(`Failed to parse character: ${error}`);
