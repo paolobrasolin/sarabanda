@@ -787,22 +787,9 @@ body {
   font-weight: 600;
 }
 
-.remote-status .remote-section-title {
-  margin-bottom: 1.5rem;
-}
-
+/* Section-specific title margin overrides */
 .remote-turn-manager .remote-section-title {
   margin-bottom: 1rem;
-}
-
-.remote-character-preview {
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow-lg);
-}
-
-.remote-character-preview .remote-section-title {
-  margin-bottom: 1.5rem;
 }
 
 .remote-scores .remote-section-title {
@@ -1142,19 +1129,7 @@ body {
   border-bottom: none;
 }
 
-.remote-scores {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-
-.remote-scores h2 {
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
+/* .remote-scores inherits base styles from .remote-section */
 
 .scores-table-container {
   overflow-x: auto;
