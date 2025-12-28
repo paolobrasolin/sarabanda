@@ -49,6 +49,7 @@ function RemoteScreenContent() {
   const stateRef = useRef(state);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isPeopleDialogOpen, setIsPeopleDialogOpen] = useState(false);
+  const [selectedTeamForAward, setSelectedTeamForAward] = useState<string | null>(null);
 
   // Migrate old state format: ensure phase exists and migrate old phases
   useEffect(() => {
@@ -179,6 +180,13 @@ function RemoteScreenContent() {
       }
     };
   }, [state, updateState]);
+
+  // Reset team selection when phase or turn changes
+  useEffect(() => {
+    if (state?.phase !== 'guessing' || state?.turnType !== 'free-for-all') {
+      setSelectedTeamForAward(null);
+    }
+  }, [state?.phase, state?.turnType]);
 
   // Handle null state or config
   if (!state || !config) {
@@ -352,6 +360,8 @@ function RemoteScreenContent() {
     }
     // Complete round and move to next
     updateState(completeRound(newState, roundScores));
+    // Reset selection after awarding
+    setSelectedTeamForAward(null);
   };
 
   return (
@@ -562,64 +572,80 @@ function RemoteScreenContent() {
           {currentPhase === 'guessing' ? (
             state.turnType === 'free-for-all' ? (
               <>
-                {config.teamNames.map((team, index) => (
-                  <Button
-                    key={team}
-                    onClick={() => handleAwardFreeForAll(index)}
-                    className="control-btn control-btn-primary"
-                  >
-                    Award to {team}
-                  </Button>
-                ))}
-                <Button
-                  onClick={() => handleAwardFreeForAll(null)}
-                  className="control-btn"
-                >
-                  No Points
-                </Button>
                 <Button
                   onClick={handleStartStopTimer}
                   className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
                 >
                   {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
                 </Button>
+                <div className="turn-actions-right">
+                  <SelectProvider
+                    value={selectedTeamForAward || ''}
+                    setValue={(value) => setSelectedTeamForAward(value || null)}
+                  >
+                    <Select className="select-button">
+                      <span className="select-button-text">
+                        {selectedTeamForAward === null || selectedTeamForAward === ''
+                          ? 'Select team...'
+                          : selectedTeamForAward}
+                      </span>
+                      <SelectArrow />
+                    </Select>
+                    <SelectPopover gutter={4} sameWidth className="select-popover">
+                      {config.teamNames.map((team) => (
+                        <SelectItem key={team} value={team} className="select-item">
+                          <SelectItemCheck />
+                          {team}
+                        </SelectItem>
+                      ))}
+                    </SelectPopover>
+                  </SelectProvider>
+                  <Button
+                    onClick={() => {
+                      if (selectedTeamForAward === null || selectedTeamForAward === '') return;
+                      const teamIndex = config.teamNames.indexOf(selectedTeamForAward);
+                      if (teamIndex === -1) return;
+                      handleAwardFreeForAll(teamIndex);
+                    }}
+                    className="control-btn control-btn-primary"
+                    disabled={selectedTeamForAward === null || selectedTeamForAward === ''}
+                  >
+                    Award Points
+                  </Button>
+                  <Button
+                    onClick={() => handleAwardFreeForAll(null)}
+                    className="control-btn"
+                  >
+                    No Points
+                  </Button>
+                </div>
               </>
             ) : (
               <>
                 <Button
-                  onClick={onCorrectAnswer}
-                  className="control-btn control-btn-primary"
-                >
-                  Correct Answer
-                </Button>
-                <Button
-                  onClick={onIncorrectAnswer}
-                  className="control-btn"
-                >
-                  Incorrect/Timeout
-                </Button>
-                <Button
                   onClick={handleStartStopTimer}
                   className={`control-btn ${state.isTimerRunning ? 'control-btn-danger' : 'control-btn-primary'}`}
                 >
                   {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
                 </Button>
+                <div className="turn-actions-right">
+                  <Button
+                    onClick={onCorrectAnswer}
+                    className="control-btn control-btn-primary"
+                  >
+                    Award Points
+                  </Button>
+                  <Button
+                    onClick={onIncorrectAnswer}
+                    className="control-btn"
+                  >
+                    No Points
+                  </Button>
+                </div>
               </>
             )
           ) : (
             <>
-              <Button
-                disabled
-                className="control-btn control-btn-primary"
-              >
-                Correct Answer
-              </Button>
-              <Button
-                disabled
-                className="control-btn"
-              >
-                Incorrect/Timeout
-              </Button>
               <Button
                 onClick={handleStartStopTimer}
                 disabled
@@ -627,6 +653,20 @@ function RemoteScreenContent() {
               >
                 {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
               </Button>
+              <div className="turn-actions-right">
+                <Button
+                  disabled
+                  className="control-btn control-btn-primary"
+                >
+                  Award Points
+                </Button>
+                <Button
+                  disabled
+                  className="control-btn"
+                >
+                  No Points
+                </Button>
+              </div>
             </>
           )}
         </div>
