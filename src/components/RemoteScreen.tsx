@@ -363,6 +363,45 @@ function RemoteScreenContent() {
     setSelectedTeamForAward(null);
   };
 
+  const handleScoreChange = (round: number, team: string, value: string) => {
+    // Parse the value as a number (supports decimals like 0.5)
+    const numValue = value === '' ? 0 : parseFloat(value);
+    
+    // Validate: only allow numbers (including empty string for clearing)
+    if (value !== '' && (isNaN(numValue) || numValue < 0)) {
+      return; // Don't update if invalid
+    }
+
+    // Find the round in gameHistory and update its score
+    const updatedGameHistory = state.gameHistory.map((roundResult) => {
+      if (roundResult.round === round) {
+        return {
+          ...roundResult,
+          scores: {
+            ...roundResult.scores,
+            [team]: numValue,
+          },
+        };
+      }
+      return roundResult;
+    });
+
+    // Recalculate total scores by summing all round scores
+    const newScores: Record<string, number> = {};
+    config.teamNames.forEach((teamName) => {
+      newScores[teamName] = updatedGameHistory.reduce((sum, roundResult) => {
+        return sum + (roundResult.scores[teamName] || 0);
+      }, 0);
+    });
+
+    // Update state with new gameHistory and recalculated scores
+    updateState({
+      ...state,
+      gameHistory: updatedGameHistory,
+      scores: newScores,
+    });
+  };
+
   return (
     <div className="remote-screen">
       <section className="remote-section remote-status">
@@ -710,7 +749,24 @@ function RemoteScreenContent() {
                     {roundResult.character.given_names} {roundResult.character.family_names}
                   </td>
                   {config.teamNames.map((team) => (
-                    <td key={team}>{roundResult.scores[team] || 0}</td>
+                    <td key={team}>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={roundResult.scores[team] || 0}
+                        onChange={(e) => handleScoreChange(roundResult.round, team, e.target.value)}
+                        className="score-input"
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'center',
+                          fontSize: 'inherit',
+                          fontFamily: 'inherit',
+                        }}
+                      />
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -726,7 +782,25 @@ function RemoteScreenContent() {
                   <td><strong>Total</strong></td>
                   <td></td>
                   {config.teamNames.map((team) => (
-                    <td key={team}><strong>{state.scores[team] || 0}</strong></td>
+                    <td key={team}>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={state.scores[team] || 0}
+                        disabled
+                        className="score-input"
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'center',
+                          fontSize: 'inherit',
+                          fontFamily: 'inherit',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    </td>
                   ))}
                 </tr>
               )}

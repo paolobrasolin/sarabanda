@@ -1172,6 +1172,12 @@ body {
   color: var(--text-secondary);
 }
 
+/* Center-align score columns (starting from 3rd column: Round, Character, then scores) */
+.scores-table th:nth-child(n+3),
+.scores-table td:nth-child(n+3) {
+  text-align: center;
+}
+
 .scores-totals-row {
   background: var(--bg-secondary);
   border-top: 2px solid var(--border);
