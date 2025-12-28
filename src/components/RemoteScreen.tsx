@@ -418,7 +418,7 @@ function RemoteScreenContent() {
             </Button>
             <Button
               onClick={handleResetGame}
-              className="control-btn control-btn-primary"
+              className="control-btn control-btn-danger"
               disabled={currentPhase !== 'stopping'}
             >
               Reset
@@ -649,7 +649,7 @@ function RemoteScreenContent() {
                 </Button>
                 <Button
                   onClick={() => handleAwardFreeForAll(null)}
-                  className="control-btn"
+                  className="control-btn control-btn-danger"
                 >
                   No Points
                 </Button>
@@ -664,7 +664,7 @@ function RemoteScreenContent() {
                 </Button>
                 <Button
                   onClick={onIncorrectAnswer}
-                  className="control-btn"
+                  className="control-btn control-btn-danger"
                 >
                   No Points
                 </Button>
@@ -680,7 +680,7 @@ function RemoteScreenContent() {
               </Button>
               <Button
                 disabled
-                className="control-btn"
+                className="control-btn control-btn-danger"
               >
                 No Points
               </Button>

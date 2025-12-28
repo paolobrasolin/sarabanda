@@ -228,12 +228,13 @@ body {
 
 .select-button {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.5rem;
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 2px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
+  font-weight: 600;
   line-height: 1.5;
   font-family: inherit;
   cursor: pointer;
@@ -242,7 +243,6 @@ body {
   justify-content: space-between;
   transition: all 0.2s ease-in-out;
   box-sizing: border-box;
-  min-height: calc(0.875rem * 2 + 1.5em + 4px);
 }
 
 .select-button:hover {
@@ -805,11 +805,11 @@ body {
   background: transparent;
   border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 1.5rem;
   cursor: pointer;
   color: var(--text-primary);
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
   display: flex;
   align-items: center;
@@ -834,10 +834,10 @@ body {
 }
 
 .control-btn {
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 1.5rem;
   border-radius: 8px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   border: 2px solid var(--border);
@@ -913,9 +913,6 @@ body {
 .game-manager-actions .config-btn,
 .game-manager-actions .control-btn {
   min-width: 140px;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .turn-actions {
@@ -931,15 +928,11 @@ body {
   width: 150px;
   min-width: 150px;
   flex-shrink: 0;
-  padding: 1rem 1.5rem;
-  font-weight: 600;
 }
 
 .turn-actions .select-button {
   flex: 1;
   min-width: 0;
-  padding: 1rem 1rem;
-  font-weight: 600;
 }
 
 .turn-actions .select-button-text {
@@ -1077,9 +1070,6 @@ body {
 
 .character-preview-actions .control-btn {
   min-width: 140px;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .game-characters-table-container {
@@ -1465,8 +1455,8 @@ body {
   }
 
   .select-button {
-    padding: 0.75rem 0.875rem;
-    font-size: 0.9375rem;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
   }
 
   .select-popover {
