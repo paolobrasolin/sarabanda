@@ -395,21 +395,21 @@ function RemoteScreenContent() {
               className="control-btn control-btn-primary"
               disabled={currentPhase !== 'prepping' || state.characters.length === 0}
             >
-              Start Game
-            </Button>
-            <Button
-              onClick={handleResetGame}
-              className="control-btn control-btn-primary"
-              disabled={currentPhase !== 'stopping'}
-            >
-              Reset Game
+              Start
             </Button>
             <Button
               onClick={handleEndGame}
               className="control-btn control-btn-danger"
               disabled={currentPhase === 'prepping' || currentPhase === 'stopping'}
             >
-              End Game
+              End
+            </Button>
+            <Button
+              onClick={handleResetGame}
+              className="control-btn control-btn-primary"
+              disabled={currentPhase !== 'stopping'}
+            >
+              Reset
             </Button>
           </div>
         </div>
