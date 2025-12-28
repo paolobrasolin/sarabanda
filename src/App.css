@@ -733,11 +733,30 @@ body {
   gap: 2rem;
 }
 
-.remote-header {
+/* Base section styling - consolidates common patterns */
+.remote-section {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.5rem;
+}
+
+.remote-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.remote-section-title:only-child {
+  margin-bottom: 0;
+}
+
+/* Specific section overrides */
+.remote-header {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -756,6 +775,33 @@ body {
   font-weight: 600;
 }
 
+.remote-status .remote-section-title {
+  margin-bottom: 1.5rem;
+}
+
+.remote-turn-manager .remote-section-title {
+  margin-bottom: 1rem;
+}
+
+.remote-character-preview {
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.remote-character-preview .remote-section-title {
+  margin-bottom: 1.5rem;
+}
+
+.remote-scores .remote-section-title {
+  margin-bottom: 1rem;
+}
+
+.remote-game-characters .remote-section-title {
+  margin-bottom: 1rem;
+}
+
+/* Button Styles */
 .config-btn {
   background: transparent;
   border: 2px solid var(--border);
@@ -786,25 +832,6 @@ body {
 .config-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.remote-info {
-  color: var(--text-secondary);
-  font-size: 1rem;
-}
-
-.remote-controls {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-
-.control-buttons {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
 }
 
 .control-btn {
@@ -845,70 +872,12 @@ body {
   cursor: not-allowed;
 }
 
-.remote-turn-manager {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-
-.remote-turn-manager h2 {
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.turn-actions {
+/* Button Groups */
+.button-group {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
+  align-items: center;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.turn-actions-right {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  margin-left: auto;
-}
-
-.turn-actions-right .control-btn {
-  width: 150px;
-  min-width: 150px;
-  flex-shrink: 0;
-  padding: 1rem 1.5rem;
-  font-weight: 600;
-}
-
-.turn-actions-right .select-button {
-  flex: 1;
-  min-width: 0;
-  padding: 1rem 1rem;
-  font-weight: 600;
-}
-
-.turn-actions-right .select-button-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  min-width: 0;
-}
-
-.remote-status {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-
-.remote-status h2 {
-  color: var(--text-primary);
-  margin: 0 0 1.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
 }
 
 .game-manager-card {
@@ -950,34 +919,48 @@ body {
   font-weight: 600;
 }
 
-.remote-game-characters {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
+.turn-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.remote-game-characters h2 {
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
+/* Style buttons and selects that come after the timer button */
+.turn-actions .control-btn:not(:first-child) {
+  width: 150px;
+  min-width: 150px;
+  flex-shrink: 0;
+  padding: 1rem 1.5rem;
   font-weight: 600;
 }
 
-/* Character Preview Card */
-.remote-character-preview {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow-lg);
+.turn-actions .select-button {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem 1rem;
+  font-weight: 600;
 }
 
-.remote-character-preview h2 {
-  color: var(--text-primary);
-  margin: 0 0 1.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+.turn-actions .select-button-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.remote-info {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 
@@ -1078,6 +1061,10 @@ body {
   gap: 1rem;
   justify-content: center;
   border-left: 2px solid var(--bg-secondary);
+}
+
+.character-preview-actions > div {
+  width: 100%;
 }
 
 .character-preview-round {
@@ -1201,6 +1188,11 @@ body {
 
 .scores-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.scores-table-empty-cell {
+  text-align: center;
+  color: var(--text-secondary);
 }
 
 .scores-totals-row {
@@ -1613,6 +1605,10 @@ body {
 
   .control-btn {
     width: 100%;
+  }
+
+  .remote-section {
+    padding: 1rem;
   }
 
   .character-preview-card {

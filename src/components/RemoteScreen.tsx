@@ -26,7 +26,6 @@ import {
   markCharacterUsed,
   rerollCharacter,
   resetGame,
-  setTimerRunning,
   startGame,
   startTimer,
   stopTimer,
@@ -192,7 +191,7 @@ function RemoteScreenContent() {
   if (!state || !config) {
     return (
       <div className="remote-screen">
-        <section className="remote-header">
+        <section className="remote-section remote-header">
           <h1>Game Master Control</h1>
           <p>Loading game state...</p>
         </section>
@@ -366,8 +365,8 @@ function RemoteScreenContent() {
 
   return (
     <div className="remote-screen">
-      <section className="remote-status">
-        <h2>Game Manager</h2>
+      <section className="remote-section remote-status">
+        <h2 className="remote-section-title">Game Manager</h2>
         <div className="game-manager-card">
           <div className="game-manager-actions">
             <button
@@ -415,8 +414,8 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      <section className="remote-character-preview">
-        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <section className="remote-section remote-character-preview">
+        <h2 className="remote-section-title">
           Round Manager
           <span>
             {currentPhase === 'stopping' 
@@ -474,7 +473,7 @@ function RemoteScreenContent() {
               
               return (
                 <>
-                  <div style={{ width: '100%' }}>
+                  <div>
                     <SelectProvider
                       value={config.selectedDifficulties || []}
                       setValue={(value) => {
@@ -504,7 +503,7 @@ function RemoteScreenContent() {
                       </SelectPopover>
                     </SelectProvider>
                   </div>
-                  <div style={{ width: '100%' }}>
+                  <div>
                     <SelectProvider
                       value={config.selectedCategories || []}
                       setValue={(value) => {
@@ -555,8 +554,8 @@ function RemoteScreenContent() {
         </div>
       </section>
 
-      <section className="remote-turn-manager">
-        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <section className="remote-section remote-turn-manager">
+        <h2 className="remote-section-title">
           Turn Manager
           <span>
             {currentPhase === 'guessing' 
@@ -578,47 +577,45 @@ function RemoteScreenContent() {
                 >
                   {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
                 </Button>
-                <div className="turn-actions-right">
-                  <SelectProvider
-                    value={selectedTeamForAward || ''}
-                    setValue={(value) => setSelectedTeamForAward(value || null)}
-                  >
-                    <Select className="select-button">
-                      <span className="select-button-text">
-                        {selectedTeamForAward === null || selectedTeamForAward === ''
-                          ? 'Select team...'
-                          : selectedTeamForAward}
-                      </span>
-                      <SelectArrow />
-                    </Select>
-                    <SelectPopover gutter={4} sameWidth className="select-popover">
-                      {config.teamNames.map((team) => (
-                        <SelectItem key={team} value={team} className="select-item">
-                          <SelectItemCheck />
-                          {team}
-                        </SelectItem>
-                      ))}
-                    </SelectPopover>
-                  </SelectProvider>
-                  <Button
-                    onClick={() => {
-                      if (selectedTeamForAward === null || selectedTeamForAward === '') return;
-                      const teamIndex = config.teamNames.indexOf(selectedTeamForAward);
-                      if (teamIndex === -1) return;
-                      handleAwardFreeForAll(teamIndex);
-                    }}
-                    className="control-btn control-btn-primary"
-                    disabled={selectedTeamForAward === null || selectedTeamForAward === ''}
-                  >
-                    Award Points
-                  </Button>
-                  <Button
-                    onClick={() => handleAwardFreeForAll(null)}
-                    className="control-btn"
-                  >
-                    No Points
-                  </Button>
-                </div>
+                <SelectProvider
+                  value={selectedTeamForAward || ''}
+                  setValue={(value) => setSelectedTeamForAward(value || null)}
+                >
+                  <Select className="select-button">
+                    <span className="select-button-text">
+                      {selectedTeamForAward === null || selectedTeamForAward === ''
+                        ? 'Select team...'
+                        : selectedTeamForAward}
+                    </span>
+                    <SelectArrow />
+                  </Select>
+                  <SelectPopover gutter={4} sameWidth className="select-popover">
+                    {config.teamNames.map((team) => (
+                      <SelectItem key={team} value={team} className="select-item">
+                        <SelectItemCheck />
+                        {team}
+                      </SelectItem>
+                    ))}
+                  </SelectPopover>
+                </SelectProvider>
+                <Button
+                  onClick={() => {
+                    if (selectedTeamForAward === null || selectedTeamForAward === '') return;
+                    const teamIndex = config.teamNames.indexOf(selectedTeamForAward);
+                    if (teamIndex === -1) return;
+                    handleAwardFreeForAll(teamIndex);
+                  }}
+                  className="control-btn control-btn-primary"
+                  disabled={selectedTeamForAward === null || selectedTeamForAward === ''}
+                >
+                  Award Points
+                </Button>
+                <Button
+                  onClick={() => handleAwardFreeForAll(null)}
+                  className="control-btn"
+                >
+                  No Points
+                </Button>
               </>
             ) : (
               <>
@@ -628,20 +625,18 @@ function RemoteScreenContent() {
                 >
                   {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
                 </Button>
-                <div className="turn-actions-right">
-                  <Button
-                    onClick={onCorrectAnswer}
-                    className="control-btn control-btn-primary"
-                  >
-                    Award Points
-                  </Button>
-                  <Button
-                    onClick={onIncorrectAnswer}
-                    className="control-btn"
-                  >
-                    No Points
-                  </Button>
-                </div>
+                <Button
+                  onClick={onCorrectAnswer}
+                  className="control-btn control-btn-primary"
+                >
+                  Award Points
+                </Button>
+                <Button
+                  onClick={onIncorrectAnswer}
+                  className="control-btn"
+                >
+                  No Points
+                </Button>
               </>
             )
           ) : (
@@ -653,27 +648,25 @@ function RemoteScreenContent() {
               >
                 {state.isTimerRunning ? 'Stop Timer' : 'Start Timer'}
               </Button>
-              <div className="turn-actions-right">
-                <Button
-                  disabled
-                  className="control-btn control-btn-primary"
-                >
-                  Award Points
-                </Button>
-                <Button
-                  disabled
-                  className="control-btn"
-                >
-                  No Points
-                </Button>
-              </div>
+              <Button
+                disabled
+                className="control-btn control-btn-primary"
+              >
+                Award Points
+              </Button>
+              <Button
+                disabled
+                className="control-btn"
+              >
+                No Points
+              </Button>
             </>
           )}
         </div>
       </section>
 
-      <section className="remote-scores">
-        <h2>Scores</h2>
+      <section className="remote-section remote-scores">
+        <h2 className="remote-section-title">Scores</h2>
         <div className="scores-table-container">
           <table className="scores-table">
             <thead>
@@ -699,7 +692,7 @@ function RemoteScreenContent() {
               ))}
               {state.gameHistory.length === 0 && (
                 <tr>
-                  <td colSpan={config.teamNames.length + 2} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <td colSpan={config.teamNames.length + 2} className="scores-table-empty-cell">
                     No rounds completed yet
                   </td>
                 </tr>
@@ -719,7 +712,7 @@ function RemoteScreenContent() {
       </section>
 
       {currentPhase === 'prepping' && state.characters.length === 0 && (
-        <section className="remote-warning">
+        <section className="remote-section remote-warning">
           <p>
             <strong>No characters loaded.</strong> Please click "People" to load characters from a Google Sheet.
           </p>
@@ -728,7 +721,7 @@ function RemoteScreenContent() {
 
       {currentPhase === 'prepping' &&
         (config.selectedDifficulties.length === 0 || config.selectedCategories.length === 0) && (
-          <section className="remote-warning">
+          <section className="remote-section remote-warning">
             <p>
               <strong>Configuration incomplete.</strong> Please select at least one difficulty and one category in the
               Config screen.
