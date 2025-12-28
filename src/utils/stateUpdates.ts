@@ -142,7 +142,7 @@ export function startGame(state: GameStatus): GameStatus {
 export function endGame(state: GameStatus): GameStatus {
   return {
     ...state,
-    phase: 'prepping',
+    phase: 'stopping',
     isGameActive: false,
     isTimerRunning: false,
     timeRemaining: 0,
@@ -153,6 +153,14 @@ export function endGame(state: GameStatus): GameStatus {
     currentTeamIndex: null,
     turnType: 'team',
   };
+}
+
+/**
+ * Resets the game state back to prepping phase, clearing all game data.
+ * This is called from the stopping phase to start a new game.
+ */
+export function resetGame(state: GameStatus): GameStatus {
+  return transitionToPrepping(state);
 }
 
 export function setCurrentRound(state: GameStatus, round: number): GameStatus {

@@ -16,6 +16,7 @@ import {
   handleIncorrectAnswer,
   markCharacterUsed,
   rerollCharacter,
+  resetGame,
   setTimerRunning,
   startGame,
   startTimer,
@@ -261,6 +262,17 @@ function RemoteScreenContent() {
     }
   };
 
+  const handleResetGame = () => {
+    if (confirm('Are you sure you want to reset the game? This will clear all game data and return to the setup phase.')) {
+      // Stop timer if running
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      updateState(resetGame(state));
+    }
+  };
+
   const handleStartStopTimer = () => {
     if (state.isTimerRunning) {
       // Stop timer
@@ -367,9 +379,16 @@ function RemoteScreenContent() {
               Start Game
             </Button>
             <Button
+              onClick={handleResetGame}
+              className="control-btn control-btn-primary"
+              disabled={currentPhase !== 'stopping'}
+            >
+              Reset Game
+            </Button>
+            <Button
               onClick={handleEndGame}
               className="control-btn control-btn-danger"
-              disabled={currentPhase === 'prepping'}
+              disabled={currentPhase === 'prepping' || currentPhase === 'stopping'}
             >
               End Game
             </Button>
@@ -380,7 +399,13 @@ function RemoteScreenContent() {
       <section className="remote-character-preview">
         <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           Round Manager
-          <span>{state.currentRound > 0 ? `Round ${state.currentRound}` : 'No round active'}</span>
+          <span>
+            {currentPhase === 'stopping' 
+              ? 'Game Ended' 
+              : state.currentRound > 0 
+                ? `Round ${state.currentRound}` 
+                : 'No round active'}
+          </span>
         </h2>
         <div className="character-preview-card">
           <div className="character-preview-image">

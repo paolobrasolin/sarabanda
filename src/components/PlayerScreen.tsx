@@ -89,6 +89,11 @@ function PlayerScreenContent() {
             <h2>GET READY</h2>
             <p>The Game Master is choosing the character</p>
           </div>
+        ) : currentPhase === 'stopping' ? (
+          <div className="player-status-message">
+            <h2>WELL PLAYED</h2>
+            <p>The match is over</p>
+          </div>
         ) : currentPhase === 'guessing' && state.currentCharacter ? (
           <div
             className="player-character-display"

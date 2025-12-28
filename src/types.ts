@@ -19,7 +19,7 @@ export interface GameConfig {
   nthTurnScores: number[]; // score for each turn (1st turn, 2nd turn, etc.)
 }
 
-export type GamePhase = 'prepping' | 'choosing' | 'guessing';
+export type GamePhase = 'prepping' | 'choosing' | 'guessing' | 'stopping';
 
 export interface GameCharacter {
   character: Character;
