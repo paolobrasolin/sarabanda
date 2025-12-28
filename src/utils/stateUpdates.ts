@@ -77,7 +77,14 @@ export function transitionToChoosing(state: GameStatus): GameStatus {
   // Roll a character for this round
   const rolledCharacter = rollCharacterForRound(newState);
   if (!rolledCharacter) {
-    return state; // Cannot transition if no characters available
+    // No characters available - transition to choosing phase anyway
+    // so the master can see there are no characters and end the game
+    return {
+      ...newState,
+      phase: 'choosing',
+      currentCharacter: null,
+      currentCategory: null,
+    };
   }
 
   return {

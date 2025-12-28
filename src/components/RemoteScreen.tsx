@@ -32,7 +32,7 @@ import {
   transitionToGuessing,
   updateCharacters,
 } from '../utils/stateUpdates';
-import { createCharacterId } from '../utils/gameHelpers';
+import { createCharacterId, getAvailableCharacters } from '../utils/gameHelpers';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -523,6 +523,21 @@ function RemoteScreenContent() {
               const availableCategories = chars.length > 0 ? [...new Set(chars.map((c) => c.category))].sort() : [];
               const availableDifficulties = chars.length > 0 ? [...new Set(chars.map((c) => c.difficulty))].sort() : [];
               
+              // Calculate filtered counts (matching selected difficulties/categories)
+              const filteredAvailable = getAvailableCharacters(state);
+              const filteredAvailableCount = filteredAvailable.length;
+              const filteredTotalCount = state.characters.filter((char) => 
+                config.selectedDifficulties.includes(char.difficulty) &&
+                config.selectedCategories.includes(char.category)
+              ).length;
+              
+              // Calculate unfiltered counts (all characters)
+              const unfilteredAvailableCount = state.characters.filter((char) => {
+                const id = createCharacterId(char);
+                return !state.usedCharacters.includes(id);
+              }).length;
+              const unfilteredTotalCount = state.characters.length;
+              
               return (
                 <>
                   <div>
@@ -585,20 +600,40 @@ function RemoteScreenContent() {
                       </SelectPopover>
                     </SelectProvider>
                   </div>
-                  <Button
-                    onClick={handleRerollCharacter}
-                    className="control-btn"
-                    disabled={currentPhase !== 'choosing' || !state.currentCharacter}
-                  >
-                    Re-roll
-                  </Button>
-                  <Button
-                    onClick={handleConfirmCharacter}
-                    className="control-btn control-btn-primary"
-                    disabled={currentPhase !== 'choosing' || !state.currentCharacter}
-                  >
-                    Confirm
-                  </Button>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    padding: '0.5rem 0',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-primary, inherit)'
+                  }}>
+                    Available: {filteredAvailableCount}/{filteredTotalCount} ({unfilteredAvailableCount}/{unfilteredTotalCount})
+                  </div>
+                  {(() => {
+                    // Check if currentCharacter matches current filters
+                    const currentCharacterMatchesFilters = state.currentCharacter && 
+                      config.selectedDifficulties.includes(state.currentCharacter.difficulty) &&
+                      config.selectedCategories.includes(state.currentCharacter.category);
+                    
+                    return (
+                      <>
+                        <Button
+                          onClick={handleRerollCharacter}
+                          className="control-btn"
+                          disabled={currentPhase !== 'choosing' || filteredAvailableCount === 0}
+                        >
+                          Re-roll
+                        </Button>
+                        <Button
+                          onClick={handleConfirmCharacter}
+                          className="control-btn control-btn-primary"
+                          disabled={currentPhase !== 'choosing' || !currentCharacterMatchesFilters}
+                        >
+                          Confirm
+                        </Button>
+                      </>
+                    );
+                  })()}
                 </>
               );
             })()}
