@@ -73,12 +73,19 @@ function PlayerScreenContent() {
 
       <div className="player-sidebar">
         <div className="player-scoreboard">
-          {config.teamNames.map((team) => (
-            <div key={team} className="player-team-score">
-              <span className="player-team-name">{team}</span>
-              <span className="player-team-points">{state.scores[team] || 0}</span>
-            </div>
-          ))}
+          {config.teamNames.map((team, index) => {
+            const isCurrentTeam = state.turnType === 'free-for-all' || 
+              (state.turnType === 'team' && state.currentTeamIndex === index);
+            return (
+              <div 
+                key={team} 
+                className={`player-team-score ${isCurrentTeam ? 'player-team-current' : ''}`}
+              >
+                <span className="player-team-name">{team}</span>
+                <span className="player-team-points">{state.scores[team] || 0}</span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="player-timer">
