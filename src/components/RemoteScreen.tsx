@@ -32,7 +32,7 @@ import {
   transitionToGuessing,
   updateCharacters,
 } from '../utils/stateUpdates';
-import { createCharacterId, getAvailableCharacters } from '../utils/gameHelpers';
+import { createCharacterId, getAvailableCharacters, getPropKeys, snakeCaseToDisplayName } from '../utils/gameHelpers';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -491,7 +491,7 @@ function RemoteScreenContent() {
                 className="character-preview-image-content"
                 style={{ backgroundImage: `url(${state.currentCharacter.image_url})` }}
                 role="img"
-                aria-label={`${state.currentCharacter.given_names} ${state.currentCharacter.family_names}`}
+                aria-label={Object.values(state.currentCharacter.props).join(' ')}
               />
             ) : (
               <div className="character-preview-placeholder">No character selected</div>
@@ -499,14 +499,12 @@ function RemoteScreenContent() {
           </div>
           <div className="character-preview-info">
             <dl>
-              <div className="character-preview-field">
-                <dt>Given Names:</dt>
-                <dd>{state.currentCharacter?.given_names || '—'}</dd>
-              </div>
-              <div className="character-preview-field">
-                <dt>Family Names:</dt>
-                <dd>{state.currentCharacter?.family_names || '—'}</dd>
-              </div>
+              {state.currentCharacter && getPropKeys([state.currentCharacter]).map((propKey) => (
+                <div key={propKey} className="character-preview-field">
+                  <dt>{snakeCaseToDisplayName(propKey)}:</dt>
+                  <dd>{state.currentCharacter?.props[propKey] || '—'}</dd>
+                </div>
+              ))}
               <div className="character-preview-field">
                 <dt>Category:</dt>
                 <dd>{state.currentCharacter?.category || '—'}</dd>
@@ -777,11 +775,14 @@ function RemoteScreenContent() {
               </tr>
             </thead>
             <tbody>
-              {state.gameHistory.map((roundResult) => (
+              {state.gameHistory.map((roundResult) => {
+                const propKeys = getPropKeys([roundResult.character]);
+                const characterDisplay = propKeys.map((key) => roundResult.character.props[key]).filter(Boolean).join(' ') || '—';
+                return (
                 <tr key={roundResult.round}>
                   <td>{roundResult.round}</td>
                   <td>
-                    {roundResult.character.given_names} {roundResult.character.family_names}
+                    {characterDisplay}
                   </td>
                   {config.teamNames.map((team) => (
                     <td key={team}>
@@ -804,7 +805,8 @@ function RemoteScreenContent() {
                     </td>
                   ))}
                 </tr>
-              ))}
+                );
+              })}
               {state.gameHistory.length === 0 && (
                 <tr>
                   <td colSpan={config.teamNames.length + 2} className="scores-table-empty-cell">

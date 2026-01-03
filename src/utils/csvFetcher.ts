@@ -73,7 +73,7 @@ function parseCsvToCharacters(csvText: string): Character[] {
 
   if (!headerMap.hasRequiredColumns()) {
     throw new Error(
-      'Missing required columns. Please ensure your sheet has: family_names, given_names, category, difficulty, image_url',
+      'Missing required columns. Please ensure your sheet has: category, difficulty, image_url',
     );
   }
 
@@ -125,47 +125,52 @@ function parseCsvLine(line: string): string[] {
 }
 
 interface HeaderMap {
-  family_names: number;
-  given_names: number;
   category: number;
   difficulty: number;
   image_url: number;
+  propColumns: Array<{ name: string; index: number }>; // Columns starting with "prop."
   hasRequiredColumns(): boolean;
 }
 
 function createHeaderMap(headers: string[]): HeaderMap {
-  const map: Partial<HeaderMap> = {};
+  const map: Partial<HeaderMap> = {
+    propColumns: [],
+  };
 
   headers.forEach((header, index) => {
     const normalized = header.toLowerCase().trim();
-    switch (normalized) {
-      case 'family_names':
-      case 'family names':
-        map.family_names = index;
-        break;
-      case 'given_names':
-      case 'given names':
-        map.given_names = index;
-        break;
-      case 'category':
-        map.category = index;
-        break;
-      case 'difficulty':
-        map.difficulty = index;
-        break;
-      case 'image_url':
-      case 'image url':
-        map.image_url = index;
-        break;
+    
+    // Check if it's a prop column (starts with "prop.")
+    if (normalized.startsWith('prop.')) {
+      // Extract the property name after "prop."
+      const propName = normalized.substring(5).trim(); // Remove "prop." prefix
+      if (propName) {
+        map.propColumns!.push({ name: propName, index });
+      }
+    } else {
+      // Handle standard columns
+      switch (normalized) {
+        case 'category':
+          map.category = index;
+          break;
+        case 'difficulty':
+          map.difficulty = index;
+          break;
+        case 'image_url':
+        case 'image url':
+          map.image_url = index;
+          break;
+      }
     }
   });
 
   return {
-    ...map,
+    category: map.category!,
+    difficulty: map.difficulty!,
+    image_url: map.image_url!,
+    propColumns: map.propColumns || [],
     hasRequiredColumns() {
       return (
-        map.family_names !== undefined &&
-        map.given_names !== undefined &&
         map.category !== undefined &&
         map.difficulty !== undefined &&
         map.image_url !== undefined
@@ -176,20 +181,27 @@ function createHeaderMap(headers: string[]): HeaderMap {
 
 function parseCharacterFromValues(values: string[], headerMap: HeaderMap): Character | null {
   try {
-    const familyNames = values[headerMap.family_names]?.trim() || '';
-    const givenNames = values[headerMap.given_names]?.trim() || '';
     const category = values[headerMap.category]?.trim() || '';
     const difficulty = values[headerMap.difficulty]?.trim() || '';
     const imageUrl = values[headerMap.image_url]?.trim() || '';
 
-    // Skip empty rows
-    if (!familyNames && !givenNames) {
+    // Collect all prop.* columns into a props object
+    const props: Record<string, string> = {};
+    headerMap.propColumns.forEach((propCol) => {
+      const value = values[propCol.index]?.trim() || '';
+      if (value) {
+        props[propCol.name] = value;
+      }
+    });
+
+    // Skip empty rows (if no props and no category/difficulty, consider it empty)
+    // At minimum, we need category or difficulty to have a valid character
+    if (Object.keys(props).length === 0 && !category && !difficulty) {
       return null;
     }
 
     return {
-      family_names: familyNames,
-      given_names: givenNames,
+      props,
       category: category || 'Uncategorized',
       difficulty: difficulty,
       image_url: imageUrl,

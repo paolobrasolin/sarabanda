@@ -58,7 +58,33 @@ export function isCharacterUsed(state: GameStatus, character: Character): boolea
   return state.usedCharacters.includes(id);
 }
 
+/**
+ * Converts a snake_case string to a display name (Title Case)
+ * Example: "family_names" -> "Family Names"
+ */
+export function snakeCaseToDisplayName(snakeCase: string): string {
+  return snakeCase
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+/**
+ * Helper function to get all unique prop keys from an array of characters
+ */
+export function getPropKeys(characters: Character[]): string[] {
+  const propKeys = new Set<string>();
+  characters.forEach((char) => {
+    Object.keys(char.props).forEach((key) => propKeys.add(key));
+  });
+  return Array.from(propKeys).sort();
+}
+
 // Helper function to create character ID for tracking
+// Uses all prop values to create a unique ID
 export function createCharacterId(character: Character): string {
-  return `${character.family_names}_${character.given_names}_${character.category}`.toLowerCase().replace(/\s+/g, '_');
+  // Sort prop keys to ensure consistent ordering
+  const propKeys = Object.keys(character.props).sort();
+  const propValues = propKeys.map((key) => character.props[key] || '').join('_');
+  return `${propValues}_${character.category}`.toLowerCase().replace(/\s+/g, '_');
 }

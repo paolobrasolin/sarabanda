@@ -1,6 +1,5 @@
 export interface Character {
-  family_names: string;
-  given_names: string;
+  props: Record<string, string>; // Dynamic properties from columns named "prop.*"
   category: string;
   difficulty: string;
   image_url: string;

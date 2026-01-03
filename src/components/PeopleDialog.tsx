@@ -13,7 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameStatus } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
-import { createCharacterId } from '../utils/gameHelpers';
+import { createCharacterId, getPropKeys, snakeCaseToDisplayName } from '../utils/gameHelpers';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
@@ -237,8 +237,9 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
                   <table className="people-table">
                     <thead>
                       <tr>
-                        <th>Family Names</th>
-                        <th>Given Names</th>
+                        {getPropKeys(loadedCharacters).map((propKey) => (
+                          <th key={propKey}>{snakeCaseToDisplayName(propKey)}</th>
+                        ))}
                         <th>Category</th>
                         <th>Difficulty</th>
                         <th>Used</th>
@@ -247,10 +248,12 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
                     <tbody>
                       {loadedCharacters.map((character, index) => {
                         const used = isCharacterUsed(character);
+                        const propKeys = getPropKeys(loadedCharacters);
                         return (
                           <tr key={index} className={used ? 'character-used' : ''}>
-                            <td>{character.family_names}</td>
-                            <td>{character.given_names}</td>
+                            {propKeys.map((propKey) => (
+                              <td key={propKey}>{character.props[propKey] || ''}</td>
+                            ))}
                             <td>{character.category}</td>
                             <td>{character.difficulty}</td>
                             <td>{used ? '✓' : ''}</td>

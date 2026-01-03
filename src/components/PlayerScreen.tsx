@@ -101,7 +101,7 @@ function PlayerScreenContent() {
           >
             <img
               src={state.currentCharacter.image_url}
-              alt={`${state.currentCharacter.given_names} ${state.currentCharacter.family_names}`}
+              alt={Object.values(state.currentCharacter.props).join(' ') || 'Character'}
               className="player-character-image"
             />
           </div>
