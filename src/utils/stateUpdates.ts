@@ -40,11 +40,9 @@ export function transitionToChoosing(state: GameStatus): GameStatus {
     return state;
   }
 
-  // Validate that we have selected difficulties and categories
-  if (
-    state.config.selectedDifficulties.length === 0 ||
-    state.config.selectedCategories.length === 0
-  ) {
+  // Validate that we have at least one tag with selections
+  const hasTagSelections = Object.values(state.config.selectedTags).some((values) => values.length > 0);
+  if (!hasTagSelections) {
     return state;
   }
 
@@ -87,11 +85,15 @@ export function transitionToChoosing(state: GameStatus): GameStatus {
     };
   }
 
+  // Use first category value, or join all if multiple (for display purposes)
+  const categories = rolledCharacter.tags.category || [];
+  const currentCategory = categories.length > 0 ? categories[0] : null;
+  
   return {
     ...newState,
     phase: 'choosing',
     currentCharacter: rolledCharacter,
-    currentCategory: rolledCharacter.category,
+    currentCategory,
   };
 }
 
@@ -127,10 +129,14 @@ export function rerollCharacter(state: GameStatus): GameStatus {
     return state; // Cannot re-roll if no characters available
   }
 
+  // Use first category value, or join all if multiple (for display purposes)
+  const categories = rolledCharacter.tags.category || [];
+  const currentCategory = categories.length > 0 ? categories[0] : null;
+  
   return {
     ...state,
     currentCharacter: rolledCharacter,
-    currentCategory: rolledCharacter.category,
+    currentCategory,
   };
 }
 

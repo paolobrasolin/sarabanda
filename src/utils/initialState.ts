@@ -6,8 +6,7 @@ export const initialGameConfig: GameConfig = {
   freeTurnDuration: 30,
   nthTurnDurations: [60, 60], // one duration per team
   teamNames: ['Team A', 'Team B'],
-  selectedDifficulties: [],
-  selectedCategories: [],
+  selectedTags: {}, // Dynamic tag filters - will be populated when characters are loaded
   freeTurnScore: 0.5,
   nthTurnScores: [2, 1],
 };

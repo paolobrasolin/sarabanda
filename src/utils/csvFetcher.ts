@@ -73,7 +73,7 @@ function parseCsvToCharacters(csvText: string): Character[] {
 
   if (!headerMap.hasRequiredColumns()) {
     throw new Error(
-      'Missing required columns. Please ensure your sheet has: category, difficulty, image_url',
+      'Missing required columns. Please ensure your sheet has: image_url',
     );
   }
 
@@ -125,16 +125,16 @@ function parseCsvLine(line: string): string[] {
 }
 
 interface HeaderMap {
-  category: number;
-  difficulty: number;
   image_url: number;
   propColumns: Array<{ name: string; index: number }>; // Columns starting with "prop."
+  tagColumns: Array<{ name: string; index: number }>; // Columns starting with "tags."
   hasRequiredColumns(): boolean;
 }
 
 function createHeaderMap(headers: string[]): HeaderMap {
   const map: Partial<HeaderMap> = {
     propColumns: [],
+    tagColumns: [],
   };
 
   headers.forEach((header, index) => {
@@ -147,15 +147,15 @@ function createHeaderMap(headers: string[]): HeaderMap {
       if (propName) {
         map.propColumns!.push({ name: propName, index });
       }
+    } else if (normalized.startsWith('tags.')) {
+      // Extract the tag name after "tags."
+      const tagName = normalized.substring(5).trim(); // Remove "tags." prefix
+      if (tagName) {
+        map.tagColumns!.push({ name: tagName, index });
+      }
     } else {
       // Handle standard columns
       switch (normalized) {
-        case 'category':
-          map.category = index;
-          break;
-        case 'difficulty':
-          map.difficulty = index;
-          break;
         case 'image_url':
         case 'image url':
           map.image_url = index;
@@ -165,24 +165,17 @@ function createHeaderMap(headers: string[]): HeaderMap {
   });
 
   return {
-    category: map.category!,
-    difficulty: map.difficulty!,
     image_url: map.image_url!,
     propColumns: map.propColumns || [],
+    tagColumns: map.tagColumns || [],
     hasRequiredColumns() {
-      return (
-        map.category !== undefined &&
-        map.difficulty !== undefined &&
-        map.image_url !== undefined
-      );
+      return map.image_url !== undefined;
     },
   } as HeaderMap;
 }
 
 function parseCharacterFromValues(values: string[], headerMap: HeaderMap): Character | null {
   try {
-    const category = values[headerMap.category]?.trim() || '';
-    const difficulty = values[headerMap.difficulty]?.trim() || '';
     const imageUrl = values[headerMap.image_url]?.trim() || '';
 
     // Collect all prop.* columns into a props object
@@ -194,16 +187,28 @@ function parseCharacterFromValues(values: string[], headerMap: HeaderMap): Chara
       }
     });
 
-    // Skip empty rows (if no props and no category/difficulty, consider it empty)
-    // At minimum, we need category or difficulty to have a valid character
-    if (Object.keys(props).length === 0 && !category && !difficulty) {
+    // Collect all tags.* columns into a tags object
+    // Split by comma (with optional whitespace) to support multiple values
+    const tags: Record<string, string[]> = {};
+    headerMap.tagColumns.forEach((tagCol) => {
+      const value = values[tagCol.index]?.trim() || '';
+      if (value) {
+        // Split by comma with optional whitespace, then trim each value
+        const tagValues = value.split(/\s*,\s*/).map((v) => v.trim()).filter((v) => v.length > 0);
+        if (tagValues.length > 0) {
+          tags[tagCol.name] = tagValues;
+        }
+      }
+    });
+
+    // Skip empty rows (if no props, no tags, and no image, consider it empty)
+    if (Object.keys(props).length === 0 && Object.keys(tags).length === 0 && !imageUrl) {
       return null;
     }
 
     return {
       props,
-      category: category || 'Uncategorized',
-      difficulty: difficulty,
+      tags,
       image_url: imageUrl,
     };
   } catch (error) {

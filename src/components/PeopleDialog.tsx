@@ -13,7 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { StorageProvider, useStorage } from '../hooks/useStorage';
 import type { Character, GameConfig, GameStatus } from '../types';
 import { fetchCharactersFromGoogleSheet } from '../utils/csvFetcher';
-import { createCharacterId, getPropKeys, snakeCaseToDisplayName } from '../utils/gameHelpers';
+import { createCharacterId, getPropKeys, getTagKeys, getTagValues, snakeCaseToDisplayName } from '../utils/gameHelpers';
 import { initialGameConfig, initialGameStatus } from '../utils/initialState';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
@@ -44,8 +44,8 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
   const [validationStatus, setValidationStatus] = useState<{
     isValid: boolean;
     characterCount: number;
-    categories: string[];
-    difficulties: string[];
+    propertyCount: number;
+    tagCount: number;
   } | null>(null);
 
   // Initialize from localStorage directly
@@ -62,14 +62,14 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (loadedCharacters.length > 0) {
       const characters = loadedCharacters;
-      const categories = [...new Set(characters.map((c) => c.category))].sort();
-      const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
+      const propKeys = getPropKeys(characters);
+      const tagKeys = getTagKeys(characters);
 
       setValidationStatus({
         isValid: true,
         characterCount: characters.length,
-        categories,
-        difficulties,
+        propertyCount: propKeys.length,
+        tagCount: tagKeys.length,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,34 +129,40 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
       if (result.success && result.data) {
         const characters = result.data;
         setLoadedCharacters(characters);
-        const categories = [...new Set(characters.map((c) => c.category))].sort();
-        const difficulties = [...new Set(characters.map((c) => c.difficulty))].sort();
+        const propKeys = getPropKeys(characters);
+        const tagKeys = getTagKeys(characters);
 
         setValidationStatus({
           isValid: true,
           characterCount: characters.length,
-          categories,
-          difficulties,
+          propertyCount: propKeys.length,
+          tagCount: tagKeys.length,
         });
 
-        // Update config with URL and reset selected categories/difficulties to all available
+        // Update config with URL and initialize selectedTags with all available values for each tag
         const configString = localStorage.getItem(STORAGE_KEYS.CONFIG);
         if (configString) {
           try {
             const config = JSON.parse(configString) as GameConfig;
+            const selectedTags: Record<string, string[]> = {};
+            tagKeys.forEach((tagKey) => {
+              selectedTags[tagKey] = getTagValues(characters, tagKey);
+            });
+            
             updateConfigStorage({
               ...config,
               googleSheetUrl,
-              selectedCategories: categories,
-              selectedDifficulties: difficulties,
+              selectedTags,
             });
           } catch {
             // Ignore parse errors
           }
         }
 
+        const propertyCount = propKeys.length;
+        const tagCount = tagKeys.length;
         alert(
-          `Data Loaded Successfully\n\nLoaded ${characters.length} characters with ${categories.length} categories and ${difficulties.length} difficulty levels.`,
+          `Data Loaded Successfully\n\nLoaded ${characters.length} characters with ${propertyCount} propert${propertyCount !== 1 ? 'ies' : 'y'} and ${tagCount} tag${tagCount !== 1 ? 's' : ''}.`,
         );
       } else {
         alert(`Failed to Load Data\n\n${result.error || 'Failed to load data from the Google Sheet.'}`);
@@ -230,8 +236,7 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
             {validationStatus && loadedCharacters.length > 0 && (
               <div className="loaded-data-section">
                 <h3>
-                  Loaded Data ({validationStatus.characterCount} characters, {validationStatus.categories.length}{' '}
-                  categories, {validationStatus.difficulties.length} difficulties)
+                  Loaded Data ({validationStatus.characterCount} characters, {validationStatus.propertyCount} propert{validationStatus.propertyCount !== 1 ? 'ies' : 'y'}, {validationStatus.tagCount} tag{validationStatus.tagCount !== 1 ? 's' : ''})
                 </h3>
                 <div className="people-table-container">
                   <table className="people-table">
@@ -240,8 +245,9 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
                         {getPropKeys(loadedCharacters).map((propKey) => (
                           <th key={propKey}>{snakeCaseToDisplayName(propKey)}</th>
                         ))}
-                        <th>Category</th>
-                        <th>Difficulty</th>
+                        {getTagKeys(loadedCharacters).map((tagKey) => (
+                          <th key={tagKey}>{snakeCaseToDisplayName(tagKey)}</th>
+                        ))}
                         <th>Used</th>
                       </tr>
                     </thead>
@@ -249,13 +255,18 @@ function PeopleDialogContent({ onClose }: { onClose: () => void }) {
                       {loadedCharacters.map((character, index) => {
                         const used = isCharacterUsed(character);
                         const propKeys = getPropKeys(loadedCharacters);
+                        const tagKeys = getTagKeys(loadedCharacters);
                         return (
                           <tr key={index} className={used ? 'character-used' : ''}>
                             {propKeys.map((propKey) => (
                               <td key={propKey}>{character.props[propKey] || ''}</td>
                             ))}
-                            <td>{character.category}</td>
-                            <td>{character.difficulty}</td>
+                            {tagKeys.map((tagKey) => {
+                              const tagValues = character.tags[tagKey] || [];
+                              return (
+                                <td key={tagKey}>{tagValues.length > 0 ? tagValues.join(', ') : ''}</td>
+                              );
+                            })}
                             <td>{used ? '✓' : ''}</td>
                           </tr>
                         );

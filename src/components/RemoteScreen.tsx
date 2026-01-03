@@ -32,7 +32,7 @@ import {
   transitionToGuessing,
   updateCharacters,
 } from '../utils/stateUpdates';
-import { createCharacterId, getAvailableCharacters, getPropKeys, snakeCaseToDisplayName } from '../utils/gameHelpers';
+import { createCharacterId, getAvailableCharacters, getPropKeys, getTagKeys, getTagValues, matchesTagFilters, snakeCaseToDisplayName } from '../utils/gameHelpers';
 import { STORAGE_KEYS } from '../utils/storageKeys';
 
 /**
@@ -211,8 +211,10 @@ function RemoteScreenContent() {
       alert('Please configure the game first by loading characters from a Google Sheet.');
       return;
     }
-    if (config.selectedDifficulties.length === 0 || config.selectedCategories.length === 0) {
-      alert('Please select at least one difficulty and one category in the configuration.');
+    // Check if at least one tag has selections
+    const hasTagSelections = Object.values(config.selectedTags).some((values) => values.length > 0);
+    if (!hasTagSelections) {
+      alert('Please select at least one value for at least one tag in the configuration.');
       return;
     }
 
@@ -221,20 +223,19 @@ function RemoteScreenContent() {
 
     // Check if any characters match the selected criteria
     const availableCharacters = stateWithConfig.characters.filter(
-      (char) =>
-        config.selectedDifficulties.includes(char.difficulty) && config.selectedCategories.includes(char.category),
+      (char) => matchesTagFilters(char, config.selectedTags),
     );
 
     if (availableCharacters.length === 0) {
-      const availableDifficulties = [...new Set(state.characters.map((c) => c.difficulty))];
-      const availableCategories = [...new Set(state.characters.map((c) => c.category))];
+      const tagKeys = getTagKeys(state.characters);
+      const availableInfo = tagKeys.map((tagKey) => {
+        const values = getTagValues(state.characters, tagKey);
+        const selected = config.selectedTags[tagKey] || [];
+        return `${snakeCaseToDisplayName(tagKey)}: Selected [${selected.join(', ') || 'None'}], Available [${values.join(', ')}]`;
+      }).join('\n');
+      
       alert(
-        `No characters match the selected criteria.\n\n` +
-        `Selected difficulties: ${config.selectedDifficulties.join(', ') || 'None'}\n` +
-        `Selected categories: ${config.selectedCategories.join(', ') || 'None'}\n\n` +
-        `Available difficulties: ${availableDifficulties.join(', ')}\n` +
-        `Available categories: ${availableCategories.join(', ')}\n\n` +
-        `Please adjust your selection in the Config screen.`,
+        `No characters match the selected criteria.\n\n${availableInfo}\n\nPlease adjust your selection.`,
       );
       return;
     }
@@ -505,28 +506,27 @@ function RemoteScreenContent() {
                   <dd>{state.currentCharacter?.props[propKey] || '—'}</dd>
                 </div>
               ))}
-              <div className="character-preview-field">
-                <dt>Category:</dt>
-                <dd>{state.currentCharacter?.category || '—'}</dd>
-              </div>
-              <div className="character-preview-field">
-                <dt>Difficulty:</dt>
-                <dd>{state.currentCharacter?.difficulty || '—'}</dd>
-              </div>
+              {state.currentCharacter && getTagKeys([state.currentCharacter]).map((tagKey) => {
+                const tagValues = state.currentCharacter?.tags[tagKey] || [];
+                return (
+                  <div key={tagKey} className="character-preview-field">
+                    <dt>{snakeCaseToDisplayName(tagKey)}:</dt>
+                    <dd>{tagValues.length > 0 ? tagValues.join(', ') : '—'}</dd>
+                  </div>
+                );
+              })}
             </dl>
           </div>
           <div className="character-preview-actions">
             {(() => {
               const chars = savedPeople || state.characters || [];
-              const availableCategories = chars.length > 0 ? [...new Set(chars.map((c) => c.category))].sort() : [];
-              const availableDifficulties = chars.length > 0 ? [...new Set(chars.map((c) => c.difficulty))].sort() : [];
+              const tagKeys = getTagKeys(chars);
               
-              // Calculate filtered counts (matching selected difficulties/categories)
+              // Calculate filtered counts (matching selected tag filters)
               const filteredAvailable = getAvailableCharacters(state);
               const filteredAvailableCount = filteredAvailable.length;
               const filteredTotalCount = state.characters.filter((char) => 
-                config.selectedDifficulties.includes(char.difficulty) &&
-                config.selectedCategories.includes(char.category)
+                matchesTagFilters(char, config.selectedTags)
               ).length;
               
               // Calculate unfiltered counts (all characters)
@@ -538,66 +538,46 @@ function RemoteScreenContent() {
               
               return (
                 <>
-                  <div>
-                    <SelectProvider
-                      value={config.selectedDifficulties || []}
-                      setValue={(value) => {
-                        if (!config) return;
-                        updateConfig({
-                          ...config,
-                          selectedDifficulties: Array.isArray(value) ? value.sort() : config.selectedDifficulties || [],
-                        });
-                      }}
-                    >
-                      <SelectLabel>Difficulties</SelectLabel>
-                      <Select className="select-button" required>
-                        {!config.selectedDifficulties || config.selectedDifficulties.length === 0
-                          ? 'No selection'
-                          : config.selectedDifficulties.length === 1
-                            ? config.selectedDifficulties[0]
-                            : `${config.selectedDifficulties.length} selected`}
-                        <SelectArrow />
-                      </Select>
-                      <SelectPopover gutter={4} sameWidth className="select-popover">
-                        {availableDifficulties.map((difficulty) => (
-                          <SelectItem key={difficulty} value={difficulty} className="select-item">
-                            <SelectItemCheck />
-                            {difficulty}
-                          </SelectItem>
-                        ))}
-                      </SelectPopover>
-                    </SelectProvider>
-                  </div>
-                  <div>
-                    <SelectProvider
-                      value={config.selectedCategories || []}
-                      setValue={(value) => {
-                        if (!config) return;
-                        updateConfig({
-                          ...config,
-                          selectedCategories: Array.isArray(value) ? value.sort() : config.selectedCategories || [],
-                        });
-                      }}
-                    >
-                      <SelectLabel>Categories</SelectLabel>
-                      <Select className="select-button">
-                        {!config.selectedCategories || config.selectedCategories.length === 0
-                          ? 'No selection'
-                          : config.selectedCategories.length === 1
-                            ? config.selectedCategories[0]
-                            : `${config.selectedCategories.length} selected`}
-                        <SelectArrow />
-                      </Select>
-                      <SelectPopover gutter={4} sameWidth className="select-popover">
-                        {availableCategories.map((category) => (
-                          <SelectItem key={category} value={category} className="select-item">
-                            <SelectItemCheck />
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectPopover>
-                    </SelectProvider>
-                  </div>
+                  {tagKeys.map((tagKey) => {
+                    const availableValues = getTagValues(chars, tagKey);
+                    const selectedValues = config.selectedTags[tagKey] || [];
+                    
+                    return (
+                      <div key={tagKey}>
+                        <SelectProvider
+                          value={selectedValues}
+                          setValue={(value) => {
+                            if (!config) return;
+                            updateConfig({
+                              ...config,
+                              selectedTags: {
+                                ...config.selectedTags,
+                                [tagKey]: Array.isArray(value) ? value.sort() : [],
+                              },
+                            });
+                          }}
+                        >
+                          <SelectLabel>{snakeCaseToDisplayName(tagKey)}</SelectLabel>
+                          <Select className="select-button">
+                            {selectedValues.length === 0
+                              ? 'No selection'
+                              : selectedValues.length === 1
+                                ? selectedValues[0]
+                                : `${selectedValues.length} selected`}
+                            <SelectArrow />
+                          </Select>
+                          <SelectPopover gutter={4} sameWidth className="select-popover">
+                            {availableValues.map((value) => (
+                              <SelectItem key={value} value={value} className="select-item">
+                                <SelectItemCheck />
+                                {value}
+                              </SelectItem>
+                            ))}
+                          </SelectPopover>
+                        </SelectProvider>
+                      </div>
+                    );
+                  })}
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -610,8 +590,7 @@ function RemoteScreenContent() {
                   {(() => {
                     // Check if currentCharacter matches current filters
                     const currentCharacterMatchesFilters = state.currentCharacter && 
-                      config.selectedDifficulties.includes(state.currentCharacter.difficulty) &&
-                      config.selectedCategories.includes(state.currentCharacter.category);
+                      matchesTagFilters(state.currentCharacter, config.selectedTags);
                     
                     return (
                       <>
