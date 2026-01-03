@@ -688,6 +688,7 @@ body {
   margin: 0;
   text-align: left;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .splash-version {

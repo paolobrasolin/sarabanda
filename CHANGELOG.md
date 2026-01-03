@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Conventional changelog.
 
+### Fixed
+
+- Minor layout adjustments.
+
 ### Changed
 
 - Allow for generic `prop.*` columns instead of `family_names` and `given_names`.
