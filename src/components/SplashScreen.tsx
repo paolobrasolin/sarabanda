@@ -1,11 +1,24 @@
 import { Button } from '@ariakit/react';
 import mascotImage from '../assets/mascot.png';
+import { STORAGE_KEYS } from '../utils/storageKeys';
 
 export function SplashScreen() {
   const openMode = (mode: 'config' | 'remote' | 'player') => {
     const url = new URL(window.location.href);
     url.hash = mode;
     window.open(url.toString(), '_blank');
+  };
+
+  const handleHardReset = () => {
+    if (confirm('Are you sure you want to clear all data and reset the app? This cannot be undone.')) {
+      // Clear all localStorage data
+      Object.values(STORAGE_KEYS).forEach((key) => {
+        localStorage.removeItem(key);
+      });
+
+      // Reload the page to start fresh
+      window.location.reload();
+    }
   };
 
   return (
@@ -22,6 +35,31 @@ export function SplashScreen() {
             <Button className="splash-btn splash-btn-primary" onClick={() => openMode('player')}>
               Player
             </Button>
+          </div>
+          <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary, #666)' }}>
+            If the remote is crashing, click to{' '}
+            <button
+              onClick={handleHardReset}
+              style={{
+                fontSize: '0.875rem',
+                padding: '0',
+                backgroundColor: 'transparent',
+                color: 'var(--accent-primary, #007bff)',
+                border: 'none',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-danger, #dc3545)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary, #007bff)';
+              }}
+            >
+              do a hard reset
+            </button>
+            .
           </div>
         </div>
         <div className="splash-right">
