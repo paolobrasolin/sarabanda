@@ -37,29 +37,47 @@ export function SplashScreen() {
             </Button>
           </div>
           <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary, #666)' }}>
-            If the remote is crashing, click to{' '}
-            <button
-              onClick={handleHardReset}
-              style={{
-                fontSize: '0.875rem',
-                padding: '0',
-                backgroundColor: 'transparent',
-                color: 'var(--accent-primary, #007bff)',
-                border: 'none',
-                textDecoration: 'underline',
-                cursor: 'pointer',
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--accent-danger, #dc3545)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--accent-primary, #007bff)';
-              }}
-            >
-              do a hard reset
-            </button>
-            .
+            <div style={{ marginBottom: '0.5rem' }}>
+              Unsure how to proceed? Click to{' '}
+              <a
+                href="https://github.com/paolobrasolin/sarabanda/blob/main/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: 'var(--accent-primary, #007bff)',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                }}
+              >
+                open the readme
+              </a>
+              .
+            </div>
+            <div>
+              If the remote is crashing, click to{' '}
+              <button
+                onClick={handleHardReset}
+                style={{
+                  fontSize: '0.875rem',
+                  padding: '0',
+                  backgroundColor: 'transparent',
+                  color: 'var(--accent-primary, #007bff)',
+                  border: 'none',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--accent-danger, #dc3545)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--accent-primary, #007bff)';
+                }}
+              >
+                do a hard reset
+              </button>
+              .
+            </div>
           </div>
         </div>
         <div className="splash-right">
