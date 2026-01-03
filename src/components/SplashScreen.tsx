@@ -12,7 +12,9 @@ export function SplashScreen() {
     <div className="splash-screen">
       <div className="splash-content">
         <div className="splash-left">
-          <h1 className="splash-title">Sarabanda</h1>
+          <h1 className="splash-title">
+            Sarabanda <span className="splash-version">{process.env.APP_VERSION}</span>
+          </h1>
           <div className="splash-buttons">
             <Button className="splash-btn splash-btn-primary" onClick={() => openMode('remote')}>
               Remote

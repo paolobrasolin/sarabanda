@@ -1,8 +1,14 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
+import packageJson from './package.json';
 
 export default defineConfig({
   plugins: [pluginReact()],
+  source: {
+    define: {
+      'process.env.APP_VERSION': JSON.stringify(`v${packageJson.version}`),
+    },
+  },
   server: {
     base: '/sarabanda/',
   },

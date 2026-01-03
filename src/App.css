@@ -690,6 +690,11 @@ body {
   letter-spacing: -0.02em;
 }
 
+.splash-version {
+  font-size: 1.0rem;
+  vertical-align: baseline;
+}
+
 .splash-buttons {
   display: flex;
   gap: 1.5rem;
